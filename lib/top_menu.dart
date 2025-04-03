@@ -45,13 +45,6 @@ class TopMenu extends StatelessWidget {
                 onPressed: () {}, // 未実装
                 child: Text('写真撮影'),
               ),
-              // なお一括設定できるとあるが、単純なchild追加では複数設定できないらしい
-              // わかりづらいが一括設定の方法は別途記載する。
-              // ↓これはエラーNG
-              // child: ElevatedButton(
-              //   onPressed: () {}, // 未実装
-              //   child: Text('写真撮影2'),
-              // ),
             ),
             ElevatedButton(
               onPressed: () {
@@ -63,9 +56,29 @@ class TopMenu extends StatelessWidget {
               },
               child: Text('黒板設定'),
             ),
-            ElevatedButton(
-              onPressed: () {}, // 未実装
-              child: Text('写真アップロード'),
+            Theme(
+              // Theme()ウィジェットによる個別のデザインの複数個所設定例
+              data: Theme.of(context).copyWith(
+                elevatedButtonTheme: ElevatedButtonThemeData(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.yellow,
+                  ),
+                ),
+              ),
+              // 複数ウィジェットは Column, Row, ListView などで包んでから入れる必要がある
+              // Theme()使うときは常にこの書き方で書くか、そもそもstyle: ElevatedButton.styleFrom()で書くのが無難そうです
+              child:Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {}, // 未実装
+                      child: Text('写真アップロード'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {}, // 未実装
+                      child: Text('写真アップロード2'),
+                    ),
+                  ],
+              )
             ),
           ],
         ),
