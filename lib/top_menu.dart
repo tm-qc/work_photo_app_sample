@@ -17,7 +17,7 @@ class TopMenu extends StatelessWidget {
             //
             // 「1箇所だけ色を変えたい」なら style: ElevatedButton.styleFrom() で直接指定の方が簡潔
             ElevatedButton(
-              // style: ElevatedButton.styleFrom()の例
+              // style: ElevatedButton.styleFromの例
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
               ),
