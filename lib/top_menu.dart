@@ -12,7 +12,17 @@ class TopMenu extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Theme()ウィジェットによる個別のデザイン設定
+            // Theme()ウィジェットは、そのchildプロパティに指定されたウィジェットツリーに対して、新しいテーマ設定を適用
+            //
+            // Theme() を使うのは「複数ボタンに共通で一括で適用したいとき」らしいが長くなるので後で例を記載します。
+            //
+            // 「1箇所だけ色を変えたい」なら style: ElevatedButton.styleFrom() で直接指定の方が簡潔
             ElevatedButton(
+              // style: ElevatedButton.styleFrom()の例
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
               onPressed: () {}, // 未実装
               child: Text('事業・現場情報ダウンロード'),
             ),
