@@ -1,86 +1,90 @@
 import 'package:flutter/material.dart';
 
-// TOPメニュー画面
 class TopMenu extends StatelessWidget {
   const TopMenu({super.key});
 
   @override
+  // Flutterはウィジェットを基本にレイアウト、デザインやしていくらしいが、
+  // 何をどこにどういった法則で書くか？がバラバラ過ぎてつかめない・・
+  // とりあえずこのコードに対しての補足をは書いていきます
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('TOPメニュー')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Theme()ウィジェットによる個別のデザイン設定
-            // Theme()ウィジェットは、そのchildプロパティに指定されたウィジェットツリーに対して、新しいテーマ設定を適用
-            //
-            // 「1箇所だけ色を変えたい」なら style: ElevatedButton.styleFrom() で直接指定の方が簡潔
-            ElevatedButton(
-              // style: ElevatedButton.styleFromの例
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
-              onPressed: () {}, // 未実装
-              child: Text('事業・現場情報ダウンロード'),
-            ),
-            Theme(
-              // Theme()ウィジェットによる個別のデザイン設定例1
-              //
-              // ウィジェット内でテーマ情報を Theme.of(context) で取得できる
-              // copyWithで設定した色で上書き
-              //
-              // 注意
-              // Theme.of() を使うときは context の位置に注意。
-              // build()内ですぐに Theme.of() を読むと取れない場合がある
-              // その場合は、1個下に Builder() を入れる
-              data: Theme.of(context).copyWith(
-                elevatedButtonTheme: ElevatedButtonThemeData(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // ← 緑色に変更
-                  ),
+      // bodyに余白をつけるためにpaddingを設定
+      // Paddingが不要な時は繰り上がってbody:GridView.countみたいになる
+      body: Padding(
+        // 上下左右に16pxの余白をつける。body: Paddingがあるのでpadding必須になる
+        // ※pxは実際は「画面密度（デバイスのdpi）に合わせてFlutter側が自動調整したpx」
+        padding: const EdgeInsets.all(16.0),
+        // themeで共通のレイアウト設定
+        // Columnのときは中にtheme書くが、GridViewの時は外に書くらしい
+        child: Theme(
+          // copyWithで取得した元のMD3テーマを設定したstyleに上書き
+          data: Theme.of(context).copyWith(
+            elevatedButtonTheme: ElevatedButtonThemeData(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                  // MD3テンプレートのデフォが丸なので四角にする
+                  borderRadius: BorderRadius.zero,
                 ),
+              //  最小サイズ を指定する
+              //  GridView.count の場合、ボタンの幅は自動で2列分に分けられるから幅は 0 でOK
+              //  ボタンの高さを最低100に固定する
+              //  今回はchildAspectRatio:0.5で画面いっぱいにするので不要
+              // minimumSize: Size(0, 100),
+              textStyle: TextStyle(fontSize: 16),
               ),
-              child: ElevatedButton(
-                onPressed: () {}, // 未実装
+            ),
+          ),
+          child: GridView.count(
+            crossAxisCount: 2, // 2列
+            crossAxisSpacing: 10, // 列間の隙間
+            mainAxisSpacing: 10, // 行間の隙間
+            // 幅：高さで要素の比率を決める
+            // 今回は幅 : 高さ = 1:2 なので縦長長方形で画面いっぱいにするでちょうどよくなる
+            // いろんな大きさのスマホがあるので、だいたいこれくらいでバランスよく調整してくれるイメージ
+            //
+            // 補足
+            // childAspectRatio: 0.5：幅 : 高さ = 1:2 なので 縦長
+            // childAspectRatio: 1.0：幅 : 高さ = 1:1 なので 正方形
+            // childAspectRatio: 2.0：幅 : 高さ = 2:1 なので 横長
+            // みたいになる。
+            childAspectRatio:0.5,
+            children: [
+              // 1個目のボタン
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightGreen, // 背景色
+                ),
+                onPressed: () {},
+                child: Text('事業・現場\n情報ダウンロード', textAlign: TextAlign.center), // \nで改行
+              ),
+              // 2個目のボタン
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                onPressed: () {},
+                child: Text('黒板設定'),
+              ),
+              // 3個目のボタン
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                ),
+                onPressed: () {},
                 child: Text('写真撮影'),
               ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // 黒板設定画面へ遷移
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => BlackboardSetting()),
-                // );
-              },
-              child: Text('黒板設定'),
-            ),
-            Theme(
-              // Theme()ウィジェットによる個別のデザインの複数個所設定例
-              data: Theme.of(context).copyWith(
-                elevatedButtonTheme: ElevatedButtonThemeData(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow,
-                  ),
+              // 4個目のボタン
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
                 ),
+                onPressed: () {},
+                child: Text('写真アップ\nロード', textAlign: TextAlign.center),
               ),
-              // 複数ウィジェットは Column, Row, ListView などで包んでから入れる必要がある
-              // Theme()使うときは常にこの書き方で書くか、そもそもstyle: ElevatedButton.styleFrom()で書くのが無難そうです
-              child:Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {}, // 未実装
-                      child: Text('写真アップロード'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {}, // 未実装
-                      child: Text('写真アップロード2'),
-                    ),
-                  ],
-              )
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
