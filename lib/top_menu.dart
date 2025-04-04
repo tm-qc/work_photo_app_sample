@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'blackboard_setting.dart';
 
 class TopMenu extends StatelessWidget {
   const TopMenu({super.key});
@@ -64,7 +65,24 @@ class TopMenu extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                 ),
-                onPressed: () {},
+                // ボタンが押されたときに実行される処理
+                onPressed: () {
+                  // 黒板設定画面へ遷移（遷移先のTOPのAppBarに←の戻るボタンも自動でつきます）
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      // constをつける理由は？
+                      //
+                      // const キーワードは、Flutter（Dart）において、コンパイル時に値が決定
+                      // 実行時に変更されない定数（コンパイル時定数）を生成するために使用されます
+                      // これにより、パフォーマンスとメモリ効率が向上します
+                      //
+                      // 読み込むクラスがStatelessWidgetかつ状態変化を持っていないウィジェットであることがconstをつけれる条件
+                      // 仮に後で状態変化を持った場合はエラーになるのでconstを外せばいい
+                      builder: (context) => const BlackboardSetting(),
+                    ),
+                  );
+                },
                 child: Text('黒板設定'),
               ),
               // 3個目のボタン
