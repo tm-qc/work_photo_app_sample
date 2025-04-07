@@ -8,7 +8,9 @@ plugins {
 android {
     namespace = "com.work_photo_app_sample.work_photo_app_sample"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+//    本来はflutter.ndkVersionで良いはずだが、キャッシュ消してもなぜか26.3.11579264が復活するので、27.0.12077973を直接指定するしかない
+//    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
