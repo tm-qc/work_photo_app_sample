@@ -14,15 +14,21 @@ class _BlackboardSettingState extends State<BlackboardSetting> {
   // final：一度だけ代入できる（再代入不可）実行時に決まる
   // const：コンパイル時に確定する「完全に不変な定数」	コンパイル時に値が確定してないとダメ
 
-  // TextEditingController：TextFieldの入力値をコードから取得・設定するためのコントローラー
-  // loadSavedDataや_saveDataつかってるからコンストラクタで定義が必要？
-  // _projectController、_siteController、_forestControllerってなに？
+  // nullエラー対策の初期値
+  // TODO:null NG 初期値が必要なので一旦これで。全体の流れにそってハードコーディングは解消しないといけない
+  static const String defaultWorkType = '作業前';
+
+  // TextEditingController：TextFieldの入力値をコードから取得・設定するためのコントローラーを定義
   final TextEditingController _projectController = TextEditingController();
   final TextEditingController _siteController = TextEditingController();
   final TextEditingController _forestController = TextEditingController();
+
+  // ドロップダウンはTextEditingControllerのようなコントローラーがないようです。
+  // なので、各所でsetStateやUIでonChangeトリガーでリアクティブにしており、テキストボックスの実装方法が全然違う
+
   // ドロップダウンの選択された値を保存する変数
-  // TODO:null NG 初期値が必要なので一旦これで。全体の流れにそってハードコーディングは解消しないといけない
-  String _selectedWorkType = '作業前';
+  // 初期値いれないとnullエラーになる
+  String _selectedWorkType = defaultWorkType;
 
   // State クラスに定義されているライフサイクルメソッドを上書きしているため、 @override が必要
   // initState() はウィジェットが画面に表示される前に一度だけ呼ばれる初期化処理
@@ -34,11 +40,15 @@ class _BlackboardSettingState extends State<BlackboardSetting> {
 
   Future<void> _loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
+    // 値だけ変えても表示は更新されないので、画面に再描画行うためにsetStateでリアクティブにして値をセットしてる
     setState(() {
+      // .text で現在のテキストを取得・変更できる
       _projectController.text = prefs.getString('projectName') ?? '';
       _siteController.text = prefs.getString('siteName') ?? '';
       _forestController.text = prefs.getString('forestUnit') ?? '';
-      _selectedWorkType = prefs.getString('workType')!;
+      // プルダウンなので.text 不要
+      // 初期値いれないとnullエラーになる
+      _selectedWorkType = prefs.getString('workType') ?? defaultWorkType;
     });
   }
 
@@ -95,6 +105,7 @@ class _BlackboardSettingState extends State<BlackboardSetting> {
             Text('作業種'),
             DropdownButtonFormField<String>(
               // 今選択されている値（＝選択状態を保持する変数）を指定
+              // テキストボックスとcontrollerの紐づけの書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
               value: _selectedWorkType,
               items: ['作業前', '作業中', '作業後'].map((label) => DropdownMenuItem(
                 value: label,
@@ -104,6 +115,8 @@ class _BlackboardSettingState extends State<BlackboardSetting> {
               // 自動的に中身は更新されないので、自分で setState() して変えてあげる必要がある
               // TextFieldは「保存ボタンを押したタイミングでコントローラーから値を取得」する設計なので onChanged は不要
               onChanged: (value) {
+                // 値だけ変えても表示は更新されないので、値をセットするためにsetStateでリアクティブにする
+                // テキストボックスはonChangedもsetStateも書かなくていいし、書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
                 setState(() {
                   // nullであることは絶対にないので!で対応
                   _selectedWorkType = value!;
