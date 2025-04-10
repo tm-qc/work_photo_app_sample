@@ -1,0 +1,2 @@
+ページの状態管理State系を定義するクラスファイルを置く
+<xxx_view_model>.dart

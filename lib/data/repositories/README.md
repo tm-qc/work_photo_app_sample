@@ -1,0 +1,2 @@
+modelからデータを取得するクラス
+<xxx_repository>.dart
