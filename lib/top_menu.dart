@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'blackboard_setting.dart';
+import 'ui/blackboard_setting/widgets/blackboard_setting_screen.dart';
 
 class TopMenu extends StatelessWidget {
   const TopMenu({super.key});
