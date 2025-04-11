@@ -79,7 +79,7 @@ class TopMenu extends StatelessWidget {
                       //
                       // 読み込むクラスがStatelessWidgetかつ状態変化を持っていないウィジェットであることがconstをつけれる条件
                       // 仮に後で状態変化を持った場合はエラーになるのでconstを外せばいい
-                      builder: (context) => const BlackboardSetting(),
+                      builder: (context) => const BlackboardSettingScreen(),
                     ),
                   );
                 },
