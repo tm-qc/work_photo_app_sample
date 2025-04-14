@@ -10,14 +10,16 @@ class BlackboardSettingScreen extends StatelessWidget {
   // 「親クラスで定義されているメソッドを子クラスで上書き（override）」するときに @override をつけます。
   @override
   Widget build(BuildContext context) {
-    // 状態管理provider
+    // 状態管理ChangeNotifierProvider
+    // 「この範囲のWidgetツリーで BlackboardSettingViewModel 型のデータを使えるようにする」 という宣言
+    // ViewModelのBlackboardSettingViewModelのインスタンスを作成
     return ChangeNotifierProvider<BlackboardSettingViewModel>(
       // ViewModelを作成し、loadData()で初期値を読み込む
       //
       // 「..loadData()」ドット二つはカスケード演算子
       // 以下の理由でカスケード演算子じゃないといけない
       //
-      // .. は 「戻り値を元のインスタンスに保ったまま、メソッドを参照するだけで実行はしない」= 型がBlackboardSettingViewModelで型不一致エラーにならない
+      // .. は 「メソッドを実行するが、戻り値を元のインスタンスに保ったままになる」= 型がBlackboardSettingViewModelで型不一致エラーにならない
       // . は 「その関数の戻り値そのものを返す」= 実行して型がBlackboardSettingViewModelじゃなくなるので型不一致のエラーになる
       create: (_) => BlackboardSettingViewModel()..loadData(),
 
@@ -25,6 +27,10 @@ class BlackboardSettingScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: Text('黒板設定')),
         // ConsumerがproviderのDI機能
+        // ここでChangeNotifierProviderで作ったインスタンスを受け取る
+        // （builder プロパティに指定された関数vmで受け取る）
+        //
+        // ちなみに・・この builder の中でしか vm は使えない。画面全体で使いたいときは context.watch() を使う
         //
         // 主なメリット
         // - ViewModelのインスタンス化	create: () => ...でOK
