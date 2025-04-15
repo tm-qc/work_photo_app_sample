@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../data/services/blackboard_setting_service.dart';
 
 class BlackboardSettingViewModel extends ChangeNotifier {
-  // 初期値：ドロップダウンのデフォルト値
-  // nullエラー対策の初期値
-  // TODO:null NG 初期値が必要なので一旦これで。全体の流れにそってハードコーディングは解消しないといけない
-  static const String defaultWorkType = '作業前';
+
+  // サービス読込（lib/data/services/blackboard_setting_service.dart）
+  final BlackboardSettingService _service = BlackboardSettingService();
 
   // final：一度だけ代入できる（再代入不可）実行時に決まる
   // const：コンパイル時に確定する「完全に不変な定数」	コンパイル時に値が確定してないとダメ
@@ -17,59 +16,38 @@ class BlackboardSettingViewModel extends ChangeNotifier {
 
   // ドロップダウンはTextEditingControllerのようなコントローラーがないようです。
   // なので、各所でsetStateやUIでonChangeトリガーでリアクティブにしており、テキストボックスの実装方法が全然違う
-
-  // ドロップダウンの選択された値を保存する変数
-  // 初期値いれないとnullエラーになる
-  String selectedWorkType = defaultWorkType;
-
-  // ↓これいらない？
-  // initState() はウィジェットが画面に表示される前に一度だけ呼ばれる初期化処理
   //
-  // initState() は StatefulWidget専用のライフサイクルメソッドなので不要
-  // かわりに画面側のcreate: (_) => BlackboardSettingViewModel()..loadData()で呼び出してる
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _loadSavedData(); // アプリ起動時に保存済データを読み込み
-  // }
+  // ドロップダウンの選択された値を保存する変数の初期定義
+  // 初期値いれないとnullエラーになる
+  //
+  // 書き分け補足
+  // 変数定義をサービスに書くのは趣旨からずれるのでNG。セレクトのvalueの定義なのでViewModelに書くのセオリー
+  // defaultWorkTypeはデータ取得時の初期値として、サービスで初期値のnull対応するのでサービスに書く
+  // （判断理由がわかりにくいけど、そういうものらしい）
+  String selectedWorkType = BlackboardSettingService.defaultWorkType;
 
   // 保存されたデータを読み込む（SharedPreferences）
   Future<void> loadData() async {
-    final prefs = await SharedPreferences.getInstance();
-    // .text で現在のテキストを取得・変更できる
-    projectController.text = prefs.getString('projectName') ?? '';
-    siteController.text = prefs.getString('siteName') ?? '';
-    forestController.text = prefs.getString('forestUnit') ?? '';
-    // プルダウンなので.text 不要
-    // 初期値いれないとnullエラーになる
-    selectedWorkType = prefs.getString('workType') ?? defaultWorkType;
-    notifyListeners(); // UIに変更通知
+    // サービスの読み込み処理を使いデータを参照
+    final data = await _service.load();
+
+    // 参照データをUIに渡す
+    // !について：サービスでnull返らないようにしてるので、エラー対策でつけてる
+    projectController.text = data['projectName']!;
+    siteController.text = data['siteName']!;
+    forestController.text = data['forestUnit']!;
+    selectedWorkType = data['workType']!;
+    notifyListeners(); // UIに変更通知し表示
   }
 
   // 入力されたデータを保存する
-  Future<void> saveData(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('projectName', projectController.text);
-    await prefs.setString('siteName', siteController.text);
-    await prefs.setString('forestUnit', forestController.text);
-    await prefs.setString('workType', selectedWorkType);
-
-    // 警告対応：Don't use BuildContexts across async gaps
-    // 非同期処理（await）のあとに context を使うとアプリがクラッシュする可能性がある という警告
-    // 非同期処理のあとで context を使う前に、ウィジェットがまだ生きているかを確認することで回避
-    // mounted は StatefulWidget に自動でついてくる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
-    //
-    // 今回ここでは以下の理由でチェックできない
-    // - mounted は StatefulWidget に自動で付与されるプロパティ
-    // - ChangeNotifier には無い
-    // - ViewModel が context を使うときは、画面が破棄されたかどうかチェックができない
-    // TODO: 理想的には UI 側でトースト表示する
-    // if (!mounted) return;
-
-    // contextを使ってトースト通知（mountedチェック不要はなんで？）
-    // Don't use 'BuildContext's across async gaps.はどうする？
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('保存しました')),
+  Future<void> saveData() async {
+    // サービスの保存処理を使いデータを保存
+    await _service.save(
+      project: projectController.text,
+      site: siteController.text,
+      forest: forestController.text,
+      workType: selectedWorkType,
     );
   }
 
