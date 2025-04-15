@@ -41,14 +41,29 @@ class BlackboardSettingViewModel extends ChangeNotifier {
   }
 
   // 入力されたデータを保存する
-  Future<void> saveData() async {
-    // サービスの保存処理を使いデータを保存
-    await _service.save(
-      project: projectController.text,
-      site: siteController.text,
-      forest: forestController.text,
-      workType: selectedWorkType,
-    );
+  Future<bool> saveData() async {
+    // try cathe書くべき場所
+    //
+    // サービス：基本は書かなくてOKだが、具体的に重要な場合だけ書く
+    // ViewModel：実行箇所なのでここにtry catheかく
+    try {
+      // 失敗させる場合の仮コード
+      // TODO:ゆくゆくはテストコードの作り方を調べるので、その時に一番いいやり方を確認する
+      // throw Exception('テスト用に強制失敗させています');
+
+      // サービスの保存処理を使いデータを保存
+      await _service.save(
+        project: projectController.text,
+        site: siteController.text,
+        forest: forestController.text,
+        workType: selectedWorkType,
+      );
+      return true;
+    } catch (e) {
+      // TODO：Don't invoke 'print' in production code.なので削除か、ログに書き出すようにする
+      print('保存失敗: $e'); // ログ出力だけでもOK
+      return false;
+    }
   }
 
   // ドロップダウンの値を変更する

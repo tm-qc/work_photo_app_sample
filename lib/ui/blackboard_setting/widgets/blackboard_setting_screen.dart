@@ -87,7 +87,7 @@ class BlackboardSettingScreen extends StatelessWidget {
                   Center(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await vm.saveData();
+                        final bool result = await vm.saveData();
                         // 保存完了後のトースト(下から出てくるポップ）表示
                         //
                         // 警告対応：Don't use BuildContexts across async gaps
@@ -96,10 +96,9 @@ class BlackboardSettingScreen extends StatelessWidget {
                         //
                         // ちなみにmounted は StatefulWidget でもつかえる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
                         // 今回はbuilder: (context, vm, _)のcontextをつかっています
-                        // TODO：成功失敗でメッセージをきりわける
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('保存しました')),
+                            SnackBar(content: Text(result ? '保存しました' : '保存に失敗しました')),
                           );
                         }
                       },
