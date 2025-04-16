@@ -35,6 +35,11 @@ class BlackboardSettingService {
     // SharedPreferences を保存されたデータを読む
     final prefs = await SharedPreferences.getInstance();
     // 各項目を読み込んでMap形式で返す（nullなら空文字 or 作業前）
+    // Mapとは
+    // いわゆる連想配列。Key:valueで順番の保証はなし
+    // ※ちなみに普通の配列(Keyなし+順番保障)はListになる
+    // 参考
+    // https://dart.dev/language/collections#maps
     return {
       _projectKey: prefs.getString(_projectKey) ?? '',
       _siteKey: prefs.getString(_siteKey) ?? '',
