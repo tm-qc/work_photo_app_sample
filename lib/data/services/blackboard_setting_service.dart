@@ -14,6 +14,12 @@ class BlackboardSettingService {
 
   // save関数の定義（非同期 async await）
   // Future<void>：非同期処理で、完了したことだけ返す（値は返さない）
+  //
+  // メソッドの定義
+  // Future<void>	戻り値の型（非同期処理：結果なし）
+  // save	メソッド名（関数名）
+  // ({})	名前付き引数のブロック
+  // async	この関数は非同期処理（await使えるよ）
   Future<void> save({
     // 名前付き引数（必須）
     required String project,
@@ -31,6 +37,12 @@ class BlackboardSettingService {
   }
 
   // 読み込み処理（保存された設定をすべてMapで返す）
+  //
+  // メソッドの定義
+  // Future<Map<String, String>>	戻り値の型：Map（非同期に返される）
+  // <String, String>	Mapのキーと値の型（文字列と文字列）
+  // load	関数名（メソッド名）
+  // async	非同期処理（awaitが使える）
   Future<Map<String, String>> load() async {
     // SharedPreferences を保存されたデータを読む
     final prefs = await SharedPreferences.getInstance();
