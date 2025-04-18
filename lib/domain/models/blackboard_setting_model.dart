@@ -14,10 +14,32 @@ class BlackboardSettingModel {
   final String site;
 
   // 作業種（作業前、作業中、作業後）（ドロップダウン選択）
-  final int workTypeKey;
+  final int workTypeKeyVal;
 
   // 林小班（テキスト入力）
   final String forestSubdivision;
+
+  // 保存時に使うローカルストレージのキー（キー名のミス防止のため、定数化）
+  // view_model、model、serviceで使うので、private(_)外し、modelに定義して同じものを使うようにした。
+  static const String projectKey = 'projectName';
+  static const String siteKey = 'siteName';
+  static const String forestKey = 'forestUnit';
+  static const String workTypeKey = 'workTypeKey';
+
+  // Mapの型定義について
+  //
+  // なぜint小文字でString大文字？
+  // - int、double、bool：プリミティブ型（int型）	小文字	Dart言語がビルトインで持ってる基本型
+  // - String、List<T>、Map<K,V>、Set<T>：クラス型（文字列クラス）	大文字	String は class String {} で定義されている
+  //
+  // 型定義書くときに、IDEでもプリミティブ型かクラス型判別つかないので厄介・・エラー出るので察して書き直して・・
+  static const int defaultWorkTypeKey = 0; // 初期値
+  static const Map<int,String> workTypeOptions = {
+    defaultWorkTypeKey : '作業前',
+    1 : '作業中',
+    2 : '作業後',
+    3 : '作業中断', // 追加される可能性あり
+  };
 
   // コンストラクター（すべての値を必須にする）
   // required：インスタンス作成時に引数にこの4つの値が揃わないとインスタンスが作れなくなる
@@ -25,7 +47,7 @@ class BlackboardSettingModel {
   const BlackboardSettingModel({
     required this.project,
     required this.site,
-    required this.workTypeKey,
+    required this.workTypeKeyVal,
     required this.forestSubdivision,
   });
 
@@ -64,17 +86,17 @@ class BlackboardSettingModel {
   // 変数の型をコンパイル時にチェックしないことを明示的に示すキーワード
   // 型チェックは実行時まで遅延されます。
   // そのため、コンパイル時にはエラーにならないコードでも、実行時に型に関連するエラーが発生する可能性があるので、多用はNG
-  // TODO：toMap、fromMapつかってないけど、保存のとこかきかえないといけない？個人的にtoMap、fromMapなくてもいいような気がする。複雑化するだけ？
-  // TODO:Serviceのload()、Save()書き直した方が良い？
   Map<String, dynamic> toMap() {
     return {
-      'project': project,
-      'site': site,
-      'workTypeKey': workTypeKey,
-      'forestSubdivision': forestSubdivision,
+      projectKey: project,
+      siteKey: site,
+      workTypeKey: workTypeKeyVal,
+      forestKey: forestSubdivision,
     };
   }
 
+  // JSONで保存することなくなったから使わない予定なのでコメントアウト
+  //
   // shared_preferencesから取り出したJson文字列をMapに戻して返す
   // ※toMap()でJSON文字列化してるので、MAPに戻す処理
   //
@@ -98,27 +120,12 @@ class BlackboardSettingModel {
   //
   // - staticバージョン：static BlackboardSettingModel fromMap(...)
   // - 名前付きコンストラクタバージョン：factory BlackboardSettingModel.fromMap(...)
-  factory BlackboardSettingModel.fromMap(Map<String, dynamic> map) {
-    return BlackboardSettingModel(
-      project: map['project'] ?? '',
-      site: map['site'] ?? '',
-      workTypeKey: map['workTypeKey'],
-      forestSubdivision: map['forestSubdivision'] ?? '',
-    );
-  }
-
-  // Mapの型定義について
-  //
-  // なぜint小文字でString大文字？
-  // - int、double、bool：プリミティブ型（int型）	小文字	Dart言語がビルトインで持ってる基本型
-  // - String、List<T>、Map<K,V>、Set<T>：クラス型（文字列クラス）	大文字	String は class String {} で定義されている
-  //
-  // 型定義書くときに、IDEでもプリミティブ型かクラス型判別つかないので厄介・・エラー出るので察して書き直して・・
-  static const int defaultWorkTypeKey = 0; // 初期値
-  static const Map<int,String> workTypeOptions = {
-    defaultWorkTypeKey : '作業前',
-    1 : '作業中',
-    2 : '作業後',
-    3 : '作業中断', // 追加される可能性あり
-  };
+  // factory BlackboardSettingModel.fromMap(Map<String, dynamic> map) {
+  //   return BlackboardSettingModel(
+  //     project: map['project'] ?? '',
+  //     site: map['site'] ?? '',
+  //     workTypeKeyVal: map['workTypeKey'],
+  //     forestSubdivision: map['forestSubdivision'] ?? '',
+  //   );
+  // }
 }

@@ -2,13 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/blackboard_setting_model.dart';
 
 class BlackboardSettingService {
-  // 保存時に使うローカルストレージのキー（キー名のミス防止のため、定数化）
-  // TODO；view_model、model、serviceで使うので、private(_)外し、modelに定義して同じものを使うようにする予定。混乱するし保守性低くなる
-  static const String _projectKey = 'projectName';
-  static const String _siteKey = 'siteName';
-  static const String _forestKey = 'forestUnit';
-  static const String _workTypeKey = 'workTypeKey';
-
   // save関数の定義（非同期 async await）
   // Future<void>：非同期処理で、完了したことだけ返す（値は返さない）
   //
@@ -21,16 +14,33 @@ class BlackboardSettingService {
     // 名前付き引数（必須）
     required String project,
     required String site,
-    required String forest,
     required int workTypeKey,
+    required String forest,
   }) async {
+
+    // mapにするまえにモデルのコンストラクタで入力値を持ったインスタンス作成
+    final model = BlackboardSettingModel(
+      project: project,
+      site: site,
+      workTypeKeyVal: workTypeKey,
+      forestSubdivision: forest,
+    );
+
+    // 定義を安全にまとめるためにインスタンスを利用して入力値をmapにまとめる
+    final map = model.toMap();
+
     // 非同期で端末保存データSharedPreferencesを取得
     final prefs = await SharedPreferences.getInstance();
-    // それぞれのキーと値を保存する
-    await prefs.setString(_projectKey, project);
-    await prefs.setString(_siteKey, site);
-    await prefs.setString(_forestKey, forest);
-    await prefs.setInt(_workTypeKey, workTypeKey);
+
+    // mapをループで保存
+    //
+    // keyはtoMap()で
+    // lib/domain/models/blackboard_setting_model.dartの「保存時に使うローカルストレージのキー」参照してます
+    // ローカルストレージのキーを変更したいとき、「保存時に使うローカルストレージのキー」を変更すると思うが、同時変わるので修正漏れも防げるはず
+    map.forEach((key, value) async {
+      if (value is String) await prefs.setString(key, value);
+      if (value is int) await prefs.setInt(key, value);
+    });
   }
 
   // 読み込み処理（保存された設定をすべてMapで返す）
@@ -57,10 +67,10 @@ class BlackboardSettingService {
     // 参考
     // https://dart.dev/language/collections#maps
     return {
-      _projectKey: prefs.getString(_projectKey) ?? '',
-      _siteKey: prefs.getString(_siteKey) ?? '',
-      _forestKey: prefs.getString(_forestKey) ?? '',
-      _workTypeKey: prefs.getInt(_workTypeKey) ?? BlackboardSettingModel.defaultWorkTypeKey,
+      BlackboardSettingModel.projectKey: prefs.getString(BlackboardSettingModel.projectKey) ?? '',
+      BlackboardSettingModel.siteKey: prefs.getString(BlackboardSettingModel.siteKey) ?? '',
+      BlackboardSettingModel.workTypeKey: prefs.getInt(BlackboardSettingModel.workTypeKey) ?? BlackboardSettingModel.defaultWorkTypeKey,
+      BlackboardSettingModel.forestKey: prefs.getString(BlackboardSettingModel.forestKey) ?? '',
     };
   }
 }

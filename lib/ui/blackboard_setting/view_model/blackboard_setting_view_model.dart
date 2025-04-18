@@ -36,10 +36,10 @@ class BlackboardSettingViewModel extends ChangeNotifier {
 
     // 参照データをUIに渡す
     // !について：サービスでnull返らないようにしてるので、エラー対策でつけてる
-    projectController.text = data['projectName']!;
-    siteController.text = data['siteName']!;
-    forestController.text = data['forestUnit']!;
-    selectedWorkTypeKey = data['workTypeKey']!;
+    projectController.text = data[BlackboardSettingModel.projectKey]!;
+    siteController.text = data[BlackboardSettingModel.siteKey]!;
+    forestController.text = data[BlackboardSettingModel.forestKey]!;
+    selectedWorkTypeKey = data[BlackboardSettingModel.workTypeKey]!;
     notifyListeners(); // UIに変更通知し表示
   }
 
@@ -58,8 +58,8 @@ class BlackboardSettingViewModel extends ChangeNotifier {
       await _service.save(
         project: projectController.text,
         site: siteController.text,
-        forest: forestController.text,
         workTypeKey: selectedWorkTypeKey,
+        forest: forestController.text,
       );
       return true;
     } catch (e) {
