@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../domain/models/blackboard_setting_model.dart';
 import '../view_model/blackboard_setting_view_model.dart';
 
 class BlackboardSettingScreen extends StatelessWidget {
@@ -62,16 +63,18 @@ class BlackboardSettingScreen extends StatelessWidget {
                   SizedBox(height: 16),
 
                   Text('作業種'),
-                  DropdownButtonFormField<String>(
+                  DropdownButtonFormField<int>(
                     // 今選択されている値（＝選択状態を保持する変数）を指定
                     // テキストボックスとcontrollerの紐づけの書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
-                    value: vm.selectedWorkType,
-                    items: ['作業前', '作業中', '作業後']
-                        .map((label) => DropdownMenuItem(
-                      value: label,
-                      child: Text(label),
-                    ))
-                        .toList(),
+                    value: vm.selectedWorkTypeKey,
+                    // entries.map：キー（int）と値（String）両方
+                    // values.map：value（値）だけ
+                    items: BlackboardSettingModel.workTypeOptions.entries.map((entry) {
+                      return DropdownMenuItem<int>(
+                        value: entry.key,
+                        child: Text(entry.value),
+                      );
+                    }).toList(),
                     onChanged: vm.updateWorkType,
                     decoration: InputDecoration(hintText: '選択してください'),
                   ),

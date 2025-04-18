@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/blackboard_setting_service.dart';
+import '../../../domain/models/blackboard_setting_model.dart';
 
 class BlackboardSettingViewModel extends ChangeNotifier {
 
@@ -21,10 +22,12 @@ class BlackboardSettingViewModel extends ChangeNotifier {
   // 初期値いれないとnullエラーになる
   //
   // 書き分け補足
-  // 変数定義をサービスに書くのは趣旨からずれるのでNG。セレクトのvalueの定義なのでViewModelに書くのセオリー
+  // 変数定義をサービスに書くのは趣旨からずれるのでNG
+  // セレクトのvalueの定義なのでViewModelに書くのセオリー
+  //
   // defaultWorkTypeはデータ取得時の初期値として、サービスで初期値のnull対応するのでサービスに書く
   // （判断理由がわかりにくいけど、そういうものらしい）
-  String selectedWorkType = BlackboardSettingService.defaultWorkType;
+  int selectedWorkTypeKey = BlackboardSettingModel.defaultWorkTypeKey;
 
   // 保存されたデータを読み込む（SharedPreferences）
   Future<void> loadData() async {
@@ -36,7 +39,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
     projectController.text = data['projectName']!;
     siteController.text = data['siteName']!;
     forestController.text = data['forestUnit']!;
-    selectedWorkType = data['workType']!;
+    selectedWorkTypeKey = data['workTypeKey']!;
     notifyListeners(); // UIに変更通知し表示
   }
 
@@ -56,7 +59,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
         project: projectController.text,
         site: siteController.text,
         forest: forestController.text,
-        workType: selectedWorkType,
+        workTypeKey: selectedWorkTypeKey,
       );
       return true;
     } catch (e) {
@@ -67,9 +70,9 @@ class BlackboardSettingViewModel extends ChangeNotifier {
   }
 
   // ドロップダウンの値を変更する
-  void updateWorkType(String? value) {
-    if (value != null) {
-      selectedWorkType = value;
+  void updateWorkType(int? key) {
+    if (key != null) {
+      selectedWorkTypeKey = key;
       notifyListeners(); // UIに通知
     }
   }
