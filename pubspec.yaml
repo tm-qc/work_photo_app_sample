@@ -39,15 +39,31 @@ dependencies:
   # https://pub.dev/packages/provider/versions
   provider: ^6.1.4
 
+
+  # 「flutter_form_builder + form_builder_validators」でForm実装するデメリット
+  # 以下の理由であまりしたくないけど、バリデーション条件手書きすることにしました。
+  #
+  # ・Flutter標準構成はTextField + controllerでState管理だが、このパッケージはcontrollerが内部にあり不要
+  # ・controllerを入れる場合は、onchange+initvalueでしないと予期せぬ不具合になるらしい
+  # ・Flutter標準構成のcontrollerでのStateの流れはコードを見ても違和感ないが、
+  #   パッケージで入れた場合は、パッケージ内部のStateに依存することになり、WidgetにState代入書いたりするので、ViewModelと役割分担があいまいになり、解析するときにも？となることが増える印象
+  # ・このパッケージのリファレンスのサンプルコードにcontrollerは使ってないので、controller非推奨という認識になるみたい
+  # ・内部の仕様はAIが言っていたが、内部実装みないとわからないほどの危険性らしい。
+  #
+  # この結果からの所感
+  # バリデーション条件は手書き絶対にしたくなかったが、
+  # パッケージの実装のコード見ると、読み取れない内部実装の影響、読みづらさが発生するので、
+  # Flutter標準構成はTextField + controller+自分でバリデーション書くことにする
+  #
   # バリデーションのパッケージ(メイン：フォームUI構築支援・バリデーション土台)
   # 2025/03/14 リリースの最新版
   # https://pub.dev/packages/flutter_form_builder
-  flutter_form_builder: ^10.0.1
+  # flutter_form_builder: ^10.0.1
 
   # バリデーションの拡張パッケージ(サブ：バリデーション関数の追加。一般的に使うのも含まれるらしいので必要とのこと）
   # 2025/02/27 リリースの最新版
   # https://pub.dev/packages/form_builder_validators
-  form_builder_validators: ^11.1.2
+  # form_builder_validators: ^11.1.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
