@@ -39,6 +39,11 @@ dependencies:
   # https://pub.dev/packages/provider/versions
   provider: ^6.1.4
 
+  # バリデーションのパッケージ
+  # 2025/03/14 リリースの最新版
+  # https://pub.dev/packages/flutter_form_builder
+  flutter_form_builder: ^10.0.1
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
