@@ -10,6 +10,9 @@ class BlackboardSettingScreen extends StatefulWidget {
 }
 
 class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
+  // バリデーションの時にフォームを管理識別するために必要なキー
+  final _formKey = GlobalKey<FormState>();
+
   // なんで@overrideいるんだっけ？
   // StatefulWidget の定義済みメソッドなので、上書きすることを明示
   // 「親クラスで定義されているメソッドを子クラスで上書き（override）」するときに @override をつけます。
@@ -48,6 +51,7 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
+                key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
