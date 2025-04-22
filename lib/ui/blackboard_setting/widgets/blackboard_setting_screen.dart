@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/models/blackboard_setting_model.dart';
+import '../../../utils/validators.dart';
 import '../view_model/blackboard_setting_view_model.dart';
 
 class BlackboardSettingScreen extends StatefulWidget {
@@ -48,6 +49,15 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
         body: Consumer<BlackboardSettingViewModel>(
           // vm = ViewModelインスタンスがConsumerでBlackboardSettingViewModelに型指定され注入される
           builder: (context, vm, _) {
+            // ラベル名、バリデーションの引数などに使うのでmap共通化
+            // TODO:正しい定義場所は要検討・クラス化して定数管理？
+            const fieldLabels = {
+              'project': '事業名',
+              'site': '現場名',
+              'workType': '作業種',
+              'forest': '林小班',
+            };
+
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -55,7 +65,7 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('事業名'),
+                    Text(fieldLabels['project']!),
                     TextFormField(
                       // TextField とコントローラーが紐づくことで、入力された値をプログラム側で取得・セットできる。
                       // vmはViewModel
@@ -64,26 +74,24 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                       // リアルタイムバリデーション
                       // （送信時まとめてと別に入力時に入力欄の下にバリデーションメッセージを出せる）
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return '事業名は必須です';
-                        }
-                        if (value.length > 10) {
-                          return '10文字以内で入力してください';
-                        }
-                        return null;
-                      },
+                      // バリデーションの条件を複数行う場合は ?? でつなぐ（万が一のnull対応）
+                      validator: (value) =>
+                          Validators.required(value, label: fieldLabels['project']!) ??
+                          Validators.maxLength(value, 30, label: fieldLabels['project']!),
                     ),
                     SizedBox(height: 16),
 
-                    Text('現場名'),
-                    TextField(
+                    Text(fieldLabels['site']!),
+                    TextFormField(
                       controller: vm.siteController,
                       decoration: InputDecoration(hintText: '例：△△現場'),
+                      validator: (value) =>
+                      Validators.required(value, label: fieldLabels['site']!) ??
+                          Validators.maxLength(value, 10, label: fieldLabels['site']!),
                     ),
                     SizedBox(height: 16),
 
-                    Text('作業種'),
+                    Text(fieldLabels['workType']!),
                     DropdownButtonFormField<int>(
                       // 今選択されている値（＝選択状態を保持する変数）を指定
                       // テキストボックスとcontrollerの紐づけの書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
@@ -98,13 +106,18 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                       }).toList(),
                       onChanged: vm.updateWorkType,
                       decoration: InputDecoration(hintText: '選択してください'),
+                      validator: (value) =>
+                      Validators.selectRequired(value, label: fieldLabels['forest']!)
                     ),
                     SizedBox(height: 16),
 
-                    Text('林小班'),
-                    TextField(
+                    Text(fieldLabels['forest']!),
+                    TextFormField(
                       controller: vm.forestController,
                       decoration: InputDecoration(hintText: '例：1-2'),
+                      validator: (value) =>
+                      Validators.required(value, label: fieldLabels['forest']!) ??
+                          Validators.maxLength(value, 30, label: fieldLabels['forest']!),
                     ),
                     SizedBox(height: 24),
 
