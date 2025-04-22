@@ -111,19 +111,33 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                     Center(
                       child: ElevatedButton(
                         onPressed: () async {
-                          final bool result = await vm.saveData();
-                          // 保存完了後のトースト(下から出てくるポップ）表示
-                          //
-                          // 警告対応：Don't use BuildContexts across async gaps
-                          // 非同期処理（await）のあとに context を使うとアプリがクラッシュする可能性がある という警告
-                          // 非同期処理のあとで context を使う前に、ウィジェットがまだ生きているかをif (context.mounted)で確認することで回避
-                          //
-                          // ちなみにmounted は StatefulWidget でもつかえる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
-                          // 今回はbuilder: (context, vm, _)のcontextをつかっています
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(result ? '保存しました' : '保存に失敗しました')),
-                            );
+                          // フォームのバリデーションがOKならtrue
+                          // また万が一nullならfalseにするという条件
+                          final isValid = _formKey.currentState?.validate() ?? false;
+
+                          if(isValid){
+                            final bool result = await vm.saveData();
+                            // 保存完了後のトースト(下から出てくるポップ）表示
+                            //
+                            // 警告対応：Don't use BuildContexts across async gaps
+                            // 非同期処理（await）のあとに context を使うとアプリがクラッシュする可能性がある という警告
+                            // 非同期処理のあとで context を使う前に、ウィジェットがまだ生きているかをif (context.mounted)で確認することで回避
+                            //
+                            // ちなみにmounted は StatefulWidget でもつかえる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
+                            // 今回はbuilder: (context, vm, _)のcontextをつかっています
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(result ? '保存しました' : '保存に失敗しました')),
+                              );
+                            }
+                            return;
+                          }else{
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('入力に不備があります')),
+                              );
+                            }
+                            return;
                           }
                         },
                         child: Text('保存'),
