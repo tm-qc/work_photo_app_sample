@@ -47,72 +47,74 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
           builder: (context, vm, _) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('事業名'),
-                  TextField(
-                    // TextField とコントローラーが紐づくことで、入力された値をプログラム側で取得・セットできる。
-                    // vmはViewModel
-                    controller: vm.projectController,
-                    decoration: InputDecoration(hintText: '例：〇〇事業'),
-                  ),
-                  SizedBox(height: 16),
-
-                  Text('現場名'),
-                  TextField(
-                    controller: vm.siteController,
-                    decoration: InputDecoration(hintText: '例：△△現場'),
-                  ),
-                  SizedBox(height: 16),
-
-                  Text('作業種'),
-                  DropdownButtonFormField<int>(
-                    // 今選択されている値（＝選択状態を保持する変数）を指定
-                    // テキストボックスとcontrollerの紐づけの書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
-                    value: vm.selectedWorkTypeKey,
-                    // entries.map：キー（int）と値（String）両方
-                    // values.map：value（値）だけ
-                    items: BlackboardSettingModel.workTypeOptions.entries.map((entry) {
-                      return DropdownMenuItem<int>(
-                        value: entry.key,
-                        child: Text(entry.value),
-                      );
-                    }).toList(),
-                    onChanged: vm.updateWorkType,
-                    decoration: InputDecoration(hintText: '選択してください'),
-                  ),
-                  SizedBox(height: 16),
-
-                  Text('林小班'),
-                  TextField(
-                    controller: vm.forestController,
-                    decoration: InputDecoration(hintText: '例：1-2'),
-                  ),
-                  SizedBox(height: 24),
-
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final bool result = await vm.saveData();
-                        // 保存完了後のトースト(下から出てくるポップ）表示
-                        //
-                        // 警告対応：Don't use BuildContexts across async gaps
-                        // 非同期処理（await）のあとに context を使うとアプリがクラッシュする可能性がある という警告
-                        // 非同期処理のあとで context を使う前に、ウィジェットがまだ生きているかをif (context.mounted)で確認することで回避
-                        //
-                        // ちなみにmounted は StatefulWidget でもつかえる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
-                        // 今回はbuilder: (context, vm, _)のcontextをつかっています
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(result ? '保存しました' : '保存に失敗しました')),
-                          );
-                        }
-                      },
-                      child: Text('保存'),
+              child: Form(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('事業名'),
+                    TextField(
+                      // TextField とコントローラーが紐づくことで、入力された値をプログラム側で取得・セットできる。
+                      // vmはViewModel
+                      controller: vm.projectController,
+                      decoration: InputDecoration(hintText: '例：〇〇事業'),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 16),
+
+                    Text('現場名'),
+                    TextField(
+                      controller: vm.siteController,
+                      decoration: InputDecoration(hintText: '例：△△現場'),
+                    ),
+                    SizedBox(height: 16),
+
+                    Text('作業種'),
+                    DropdownButtonFormField<int>(
+                      // 今選択されている値（＝選択状態を保持する変数）を指定
+                      // テキストボックスとcontrollerの紐づけの書き方が大分違うので戸惑うが、ドロップダウンはコントローラーがないのでこれで覚えるしかない
+                      value: vm.selectedWorkTypeKey,
+                      // entries.map：キー（int）と値（String）両方
+                      // values.map：value（値）だけ
+                      items: BlackboardSettingModel.workTypeOptions.entries.map((entry) {
+                        return DropdownMenuItem<int>(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        );
+                      }).toList(),
+                      onChanged: vm.updateWorkType,
+                      decoration: InputDecoration(hintText: '選択してください'),
+                    ),
+                    SizedBox(height: 16),
+
+                    Text('林小班'),
+                    TextField(
+                      controller: vm.forestController,
+                      decoration: InputDecoration(hintText: '例：1-2'),
+                    ),
+                    SizedBox(height: 24),
+
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final bool result = await vm.saveData();
+                          // 保存完了後のトースト(下から出てくるポップ）表示
+                          //
+                          // 警告対応：Don't use BuildContexts across async gaps
+                          // 非同期処理（await）のあとに context を使うとアプリがクラッシュする可能性がある という警告
+                          // 非同期処理のあとで context を使う前に、ウィジェットがまだ生きているかをif (context.mounted)で確認することで回避
+                          //
+                          // ちなみにmounted は StatefulWidget でもつかえる「ウィジェットがまだ画面上に存在しているか？」を示すプロパティです。
+                          // 今回はbuilder: (context, vm, _)のcontextをつかっています
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result ? '保存しました' : '保存に失敗しました')),
+                            );
+                          }
+                        },
+                        child: Text('保存'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
