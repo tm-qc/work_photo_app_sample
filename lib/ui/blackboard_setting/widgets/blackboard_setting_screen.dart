@@ -56,11 +56,20 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('事業名'),
-                    TextField(
+                    TextFormField(
                       // TextField とコントローラーが紐づくことで、入力された値をプログラム側で取得・セットできる。
                       // vmはViewModel
                       controller: vm.projectController,
                       decoration: InputDecoration(hintText: '例：〇〇事業'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '事業名は必須です';
+                        }
+                        if (value.length > 10) {
+                          return '10文字以内で入力してください';
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 16),
 
