@@ -3,9 +3,13 @@ import 'package:provider/provider.dart';
 import '../../../domain/models/blackboard_setting_model.dart';
 import '../view_model/blackboard_setting_view_model.dart';
 
-class BlackboardSettingScreen extends StatelessWidget {
+class BlackboardSettingScreen extends StatefulWidget {
   const BlackboardSettingScreen({super.key});
+  @override
+  State<BlackboardSettingScreen> createState() => _BlackboardSettingScreenState();
+}
 
+class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
   // なんで@overrideいるんだっけ？
   // StatefulWidget の定義済みメソッドなので、上書きすることを明示
   // 「親クラスで定義されているメソッドを子クラスで上書き（override）」するときに @override をつけます。
