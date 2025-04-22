@@ -61,6 +61,9 @@ class _BlackboardSettingScreenState extends State<BlackboardSettingScreen> {
                       // vmはViewModel
                       controller: vm.projectController,
                       decoration: InputDecoration(hintText: '例：〇〇事業'),
+                      // リアルタイムバリデーション
+                      // （送信時まとめてと別に入力時に入力欄の下にバリデーションメッセージを出せる）
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return '事業名は必須です';
