@@ -16,6 +16,22 @@ void main() {
 
       counter.increment();
 
+      // テストのメソッド(=matcher)について
+      //
+      // このインポートがあればmatcherはつかえる
+      // import 'package:flutter_test/flutter_test.dart';
+      // 
+      // expect(実際の値, 期待する値や条件);
+      //
+      // testパッケージ公式
+      // https://pub.dev/packages/test#writing-tests
+      //
+      // expectpackage:matcher（メソッド(matcher)詳細）
+      // https://pub.dev/documentation/matcher/latest/index.html
+      // ※tesパッケージ公式の最初の方に「expectpackage:matcher」のメソッドを使う旨かいてある
+      // ※情報量多すぎて見るのが難しいので参考まで・・
+      //
+      // とりあえずAIとか検索で出てきたコードの理解したいときにexpectpackage:matcherのページ見ればいいとだけ頭の隅に置いておけばいいと思う・・
       expect(counter.value, 1);
     });
 
