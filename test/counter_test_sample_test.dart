@@ -20,7 +20,7 @@ void main() {
       //
       // このインポートがあればmatcherはつかえる
       // import 'package:flutter_test/flutter_test.dart';
-      // 
+      //
       // expect(実際の値, 期待する値や条件);
       //
       // testパッケージ公式
