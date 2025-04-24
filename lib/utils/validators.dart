@@ -22,7 +22,7 @@
 class Validators {
   // 必須チェック(テキスト用)
   static String? required(String? value, {String label = 'この項目'}) {
-    if (value == null || value.isEmpty) {
+    if (value == null || value.trim().isEmpty) {
       return '$labelは必須です';
     }
     return null;
