@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:work_photo_app_sample/config/labels.dart';
+import 'package:work_photo_app_sample/config/messages.dart';
 import 'package:work_photo_app_sample/ui/blackboard_setting/widgets/blackboard_setting_screen.dart';
 
 void main() {
@@ -37,7 +38,7 @@ void main() {
       // 入力の変更をUIに反映
       await tester.pumpAndSettle();
       // バリデーションエラーがリアルタイムで表示されることを確認
-      expect(find.text('事業名は必須です'), findsOneWidget);
+      expect(find.text(Messages.validation.required(Labels.project)), findsOneWidget);
     });
 
     testWidgets('事業名は30文字を超えるとエラーメッセージが出る', (tester) async {
@@ -47,7 +48,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField).first, tooLong);
       await tester.pumpAndSettle();
       // バリデーションエラーがリアルタイムで表示されることを確認
-      expect(find.text('事業名は30文字以内で入力してください'), findsOneWidget);
+      expect(find.text(Messages.validation.maxLength(Labels.project,30)), findsOneWidget);
     });
 
     testWidgets('事業名が空のまま送信するとバリデーションエラーが出ること', (tester) async {
@@ -57,7 +58,7 @@ void main() {
       // 画面に変化を反映する（バリデーションメッセージなど）
       await tester.pumpAndSettle();
       // バリデーションメッセージが表示されているか
-      expect(find.text('事業名は必須です'), findsOneWidget);
+      expect(find.text(Messages.validation.required(Labels.project)), findsOneWidget);
     });
   });
 }

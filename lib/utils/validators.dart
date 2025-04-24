@@ -19,11 +19,13 @@
 // static String? requiredWithMax(String? value, int max, {String label = 'この項目'}) {
 //   return required(value, label: label) ?? maxLength(value, max, label: label);
 // }
+import '../config/messages.dart';
+
 class Validators {
   // 必須チェック(テキスト用)
   static String? required(String? value, {String label = 'この項目'}) {
     if (value == null || value.trim().isEmpty) {
-      return '$labelは必須です';
+      return Messages.validation.required(label);
     }
     return null;
   }
@@ -32,7 +34,7 @@ class Validators {
   // dynamic 型にしているのは、セレクトの value が int, String, bool などいろいろな型になる可能性があるため
   static String? selectRequired(dynamic value, {String label = 'この項目'}) {
     if (value == null) {
-      return '$labelを選択してください';
+      return Messages.validation.selectRequired(label);
     }
     return null;
   }
@@ -42,7 +44,7 @@ class Validators {
     if (value != null && value.length > max) {
       // info: Unnecessary braces in a string interpolation
       // 単一の場合に波かっこは不要の警告：{$max}→$maxにする
-      return '$labelは$max文字以内で入力してください';
+      return Messages.validation.maxLength(label,max);
     }
     return null;
   }
