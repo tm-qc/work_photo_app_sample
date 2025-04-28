@@ -2,6 +2,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/blackboard_setting_model.dart';
 
 class BlackboardSettingService {
+
+  // SharedPreferencesを引数で受け取るために追加
+  // テスト時にモック代入するためだけに使う、本番では使わない
+  // （テストの分離のためだけというのが腑に落ちないけどこうしないと現状できなかった）
+  final SharedPreferences? _prefs;
+
+  // 初期化をコンストラクタ引数で直接行う
+  // finalは代入不可なので、この書き方じゃないとエラーになる
+  //
+  // thisについて
+  // Dartでは以下らしい。独特過ぎる印象
+  //
+  // ↓this必要
+  // - 同名の引数と区別したいとき
+  // - 今回のように省略記法（this.value）で代入する時
+  //
+  // ↓this不要
+  // 参照するだけのとき
+  //
+  // []
+  // 引数を省略可能にする（[]で囲むことで任意化）
+  BlackboardSettingService([this._prefs]);
+
   // save関数の定義（非同期 async await）
   // Future<void>：非同期処理で、完了したことだけ返す（値は返さない）
   //
@@ -30,7 +53,7 @@ class BlackboardSettingService {
     final map = model.toMap();
 
     // 非同期で端末保存データSharedPreferencesを取得
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = _prefs ?? await SharedPreferences.getInstance();
 
     // mapをループで保存
     //
