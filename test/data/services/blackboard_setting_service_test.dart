@@ -64,12 +64,15 @@ void main() {
     when(mockPrefs.setString(any, any)).thenAnswer((_) async => true);
     when(mockPrefs.setInt(any, any)).thenAnswer((_) async => true);
 
-    await service.save(
+    final result = await service.save(
       project: 'テスト事業',
       site: 'テスト現場',
       workTypeKey: 1,
       forest: '林小班A',
     );
+
+    // サービスからtrueが返ってくるかテスト
+    expect(result, isTrue);
 
     // verify：whenが成功したか（→ 保存できたことにするが成功したか）
     // 　　　　　本当に「そのキーと値」でモックに保存しようとしたかをチェック
@@ -94,17 +97,22 @@ void main() {
     when(mockPrefs.setString(any, any)).thenAnswer((_) async => false);
     when(mockPrefs.setInt(any, any)).thenAnswer((_) async => false);
 
-    await service.save(
+    final result = await service.save(
       project: 'テスト事業',
       site: 'テスト現場',
       workTypeKey: 1,
       forest: '林小班A',
     );
 
+    // サービスからfalseが返ってくるかテスト
+    expect(result, isFalse);
+
+    // 失敗パターン
+    //
+    // なぜ一個なのか？
+    // モックでfalseで動かしてるので一個目の保存でfalseが返ってくるため、一個でOK
+    // 後続があるとテストが失敗する（最初に失敗したらreturn falseするので、その後は呼ばれないため）
     verify(mockPrefs.setString(BlackboardSettingModel.projectKey, 'テスト事業')).called(1);
-    verify(mockPrefs.setString(BlackboardSettingModel.siteKey, 'テスト現場')).called(1);
-    verify(mockPrefs.setInt(BlackboardSettingModel.workTypeKey, 1)).called(1);
-    verify(mockPrefs.setString(BlackboardSettingModel.forestKey, '林小班A')).called(1);
   });
 
   // ✅ 読込成功のテスト

@@ -33,38 +33,54 @@ class BlackboardSettingService {
   // save	メソッド名（関数名）
   // ({})	名前付き引数のブロック
   // async	この関数は非同期処理（await使えるよ）
-  Future<void> save({
+  Future<bool> save({
     // 名前付き引数（必須）
     required String project,
     required String site,
     required int workTypeKey,
     required String forest,
   }) async {
+      try {
+        // mapにするまえにモデルのコンストラクタで入力値を持ったインスタンス作成
+        final model = BlackboardSettingModel(
+          project: project,
+          site: site,
+          workTypeKeyVal: workTypeKey,
+          forestSubdivision: forest,
+        );
 
-    // mapにするまえにモデルのコンストラクタで入力値を持ったインスタンス作成
-    final model = BlackboardSettingModel(
-      project: project,
-      site: site,
-      workTypeKeyVal: workTypeKey,
-      forestSubdivision: forest,
-    );
+        // 定義を安全にまとめるためにインスタンスを利用して入力値をmapにまとめる
+        final map = model.toMap();
 
-    // 定義を安全にまとめるためにインスタンスを利用して入力値をmapにまとめる
-    final map = model.toMap();
+        // 非同期で端末保存データSharedPreferencesを取得
+        final prefs = _prefs ?? await SharedPreferences.getInstance();
 
-    // 非同期で端末保存データSharedPreferencesを取得
-    final prefs = _prefs ?? await SharedPreferences.getInstance();
-
-    // mapをループで保存
-    //
-    // keyはtoMap()で
-    // lib/domain/models/blackboard_setting_model.dartの「保存時に使うローカルストレージのキー」参照してます
-    // ローカルストレージのキーを変更したいとき、「保存時に使うローカルストレージのキー」を変更すると思うが、同時変わるので修正漏れも防げるはず
-    map.forEach((key, value) async {
-      if (value is String) await prefs.setString(key, value);
-      if (value is int) await prefs.setInt(key, value);
-    });
-  }
+        // mapをループで保存
+        //
+        // for in にした理由
+        // ・map.forEachではawaitが機能しない
+        // ・forEach 内の await 式で発生した例外はキャッチできません
+        // 　（awaitなければ例外キャッチできるみたいです）
+        //
+        // map.entries：Mapの「キーとバリューのペア」を1組ずつ取り出すためのDart公式のお決まりの書き方
+        for (final entry in map.entries) {
+          if (entry.value is String) {
+            final result = await prefs.setString(entry.key, entry.value);
+            if (!result) return false;//保存失敗
+          }
+          if (entry.value is int) {
+            final result = await prefs.setInt(entry.key, entry.value);
+            if (!result) return false;//保存失敗
+          }
+        }
+        return true;//保存成功
+      } catch (e){
+        // 予期せぬエラー
+        // TODO：Don't invoke 'print' in production code.なので削除か、ログに書き出すようにする
+        print('保存失敗: $e'); // ログ出力だけでもOK
+        return false;
+      }
+    }
 
   // 読み込み処理（保存された設定をすべてMapで返す）
   //
