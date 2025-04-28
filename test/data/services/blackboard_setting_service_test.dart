@@ -9,7 +9,6 @@ import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dar
 
 import 'blackboard_setting_service_test.mocks.dart';
 
-// TODO:完成させて動作確認する
 @GenerateMocks([SharedPreferences])
 void main() {
   // 🔧 テスト準備
