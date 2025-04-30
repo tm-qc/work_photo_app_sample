@@ -4,8 +4,9 @@ import '../../../domain/models/blackboard_setting_model.dart';
 
 class BlackboardSettingViewModel extends ChangeNotifier {
 
-  // サービス読込（lib/data/services/blackboard_setting_service.dart）
-  final BlackboardSettingService _service = BlackboardSettingService();
+  // サービス読込後に格納する変数（lib/data/services/blackboard_setting_service.dart）
+  // テストの時しか使いません
+  final BlackboardSettingService? _service;
 
   // final：一度だけ代入できる（再代入不可）実行時に決まる
   // const：コンパイル時に確定する「完全に不変な定数」	コンパイル時に値が確定してないとダメ
@@ -29,10 +30,21 @@ class BlackboardSettingViewModel extends ChangeNotifier {
   // （判断理由がわかりにくいけど、そういうものらしい）
   int selectedWorkTypeKey = BlackboardSettingModel.defaultWorkTypeKey;
 
+  // 初期化をコンストラクタ引数で直接行う
+  // finalは代入不可なので、この書き方じゃないとエラーになる
+  //
+  // テストのときだけ利用。サービスのモックの都合上分離するために引数で渡すことが必要
+  // 本番ではサービス自分自身を参照するので使わない
+  //
+  // []
+  // 引数を省略可能にする（[]で囲むことで任意化）
+  BlackboardSettingViewModel([this._service]);
+
   // 保存されたデータを読み込む（SharedPreferences）
   Future<void> loadData() async {
+    final service = _service ?? BlackboardSettingService();
     // サービスの読み込み処理を使いデータを参照
-    final data = await _service.load();
+    final data = await service.load();
 
     // 参照データをUIに渡す
     // !について：サービスでnull返らないようにしてるので、エラー対策でつけてる
@@ -45,6 +57,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
 
   // 入力されたデータを保存する
   Future<bool> saveData() async {
+    final service = _service ?? BlackboardSettingService();
     // try cathe書くべき場所
     //
     // サービス：基本は書かなくてOKだが、具体的に重要な場合だけ書く
@@ -55,7 +68,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
       // throw Exception('テスト用に強制失敗させています');
 
       // サービスの保存処理を使いデータを保存
-      await _service.save(
+      await service.save(
         project: projectController.text,
         site: siteController.text,
         workTypeKey: selectedWorkTypeKey,
