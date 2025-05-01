@@ -39,6 +39,18 @@ dependencies:
   # https://pub.dev/packages/provider/versions
   provider: ^6.1.4
 
+  # ログを使いやすくするパッケージ
+  # 2024/11/16 リリースの最新版
+  # https://pub.dev/packages/logger/versions
+  logger: ^2.5.0
+
+  # スマホ内のファイルパス（保存先フォルダ）を取得ためのパッケージ
+  # 2024/10/29 リリースの最新版
+  # https://pub.dev/packages/path_provider/versions
+  path_provider: ^2.1.5
+
+
+
 
   # 「flutter_form_builder + form_builder_validators」でForm実装するデメリット
   # 以下の理由であまりしたくないけど、バリデーション条件手書きすることにしました。
