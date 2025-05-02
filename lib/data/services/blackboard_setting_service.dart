@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/blackboard_setting_model.dart';
+import '../../utils/global_logger.dart';
 
 class BlackboardSettingService {
 
@@ -41,6 +42,7 @@ class BlackboardSettingService {
     required String forest,
   }) async {
       try {
+        logger.d('サービスでもログ動いてる？'); // ログ出力だけでもOK
         // mapにするまえにモデルのコンストラクタで入力値を持ったインスタンス作成
         final model = BlackboardSettingModel(
           project: project,
@@ -76,8 +78,8 @@ class BlackboardSettingService {
         return true;//保存成功
       } catch (e){
         // 予期せぬエラー
-        // TODO：Don't invoke 'print' in production code.なので削除か、ログに書き出すようにする
-        print('保存失敗: $e'); // ログ出力だけでもOK
+        // logger使いた時は「import '../../utils/global_logger.dart';」をimportすればOK
+        logger.e('保存失敗: $e'); // ログ出力だけでもOK
         return false;
       }
     }

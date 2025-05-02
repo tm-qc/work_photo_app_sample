@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/blackboard_setting_service.dart';
 import '../../../domain/models/blackboard_setting_model.dart';
+import '../../../utils/global_logger.dart';
 
 class BlackboardSettingViewModel extends ChangeNotifier {
 
@@ -63,6 +64,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
     // サービス：基本は書かなくてOKだが、具体的に重要な場合だけ書く
     // ViewModel：実行箇所なのでここにtry catheかく
     try {
+      logger.d('デバッグ：ファイル出力のログテスト中');
       // 失敗させる場合の仮コード
       // TODO:ゆくゆくはテストコードの作り方を調べるので、その時に一番いいやり方を確認する
       // throw Exception('テスト用に強制失敗させています');
@@ -76,8 +78,7 @@ class BlackboardSettingViewModel extends ChangeNotifier {
       );
       return true;
     } catch (e) {
-      // TODO：Don't invoke 'print' in production code.なので削除か、ログに書き出すようにする
-      print('保存失敗: $e'); // ログ出力だけでもOK
+      logger.e('保存失敗: $e');
       return false;
     }
   }

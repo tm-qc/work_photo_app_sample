@@ -1,12 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:work_photo_app_sample/utils/global_logger.dart';
+import 'package:work_photo_app_sample/utils/logger_factory.dart';
 import 'top_menu.dart';
 
 // 流れは
 // 1. void mainでアプリ起動
 // 2. MyAppがアプリのルートなど基盤の設定
 
+
 // アプリを起動して、MyAppをルートウィジェットとして実行
-void main() {
+void main() async {
+  // WidgetsFlutterBinding.ensureInitialized();って？
+  //
+  // 「Flutterのバインディング（初期化）を先に確実にしてから非同期処理を行う」という正しい初期化の順序にする
+  // awaitをmain()で使うときに必要らしい
+  // 無い場合、不定期に予期せぬクラッシュが生まれることがあるらしい
+  // main() 関数内で、runApp() が呼び出される前に、かつ非同期処理を開始する前に 呼び出すのが一般的
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 最初にロガーのインスタンスを作成しておくことでlogger.d()などログ出力が使えるようになる
+  // logger使いた時は「import '../../utils/global_logger.dart';」をimportすればOK
+  // ※現状ファイル書き込みの仕組みで作ってます
+  logger = await createAppLogger(); // ロガーを作成して初期化
   runApp(const MyApp());
 }
 
