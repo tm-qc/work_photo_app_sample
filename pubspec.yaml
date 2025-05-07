@@ -98,6 +98,8 @@ dev_dependencies:
   mockito: ^5.4.6
   # https://pub.dev/packages/build_runner/versions
   build_runner: ^2.4.15
+  integration_test:
+    sdk: flutter
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
