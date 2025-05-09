@@ -4,6 +4,8 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
 import 'package:work_photo_app_sample/ui/blackboard_setting/view_model/blackboard_setting_view_model.dart';
+import 'package:work_photo_app_sample/utils/global_logger.dart';
+import '../../../utils/mock_logger.dart';
 import 'blackboard_setting_view_model_test.mocks.dart';
 
 // モックを使う理由
@@ -33,6 +35,7 @@ void main() {
     // インスタンスセットアップ
     mockService = MockBlackboardSettingService();
     viewModel = BlackboardSettingViewModel(mockService);
+    logger = createMockLogger();
   });
 
   test('保存成功時に true を返す', () async {

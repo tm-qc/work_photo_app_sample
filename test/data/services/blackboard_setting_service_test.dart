@@ -6,7 +6,8 @@ import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
 import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dart';
-
+import 'package:work_photo_app_sample/utils/global_logger.dart';
+import '../../utils/mock_logger.dart';
 import 'blackboard_setting_service_test.mocks.dart';
 
 @GenerateMocks([SharedPreferences])
@@ -30,6 +31,7 @@ void main() {
   setUp(() {
     mockPrefs = MockSharedPreferences(); // モックを生成
     service = BlackboardSettingService(mockPrefs); // Serviceに注入
+    logger = createMockLogger();
   });
 
   // ✅ 保存成功のテスト
