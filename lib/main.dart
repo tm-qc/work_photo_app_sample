@@ -1,6 +1,8 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:work_photo_app_sample/utils/global_logger.dart';
 import 'package:work_photo_app_sample/utils/logger_factory.dart';
+import 'config/camera_config.dart';
 import 'top_menu.dart';
 
 // 流れは
@@ -22,6 +24,28 @@ void main() async {
   // logger使いた時は「import '../../utils/global_logger.dart';」をimportすればOK
   // ※現状ファイル書き込みの仕組みで作ってます
   logger = await createAppLogger(); // ロガーを作成して初期化
+
+  // カメラの機能を使うためのアプリ起動時の準備
+
+  // availableCameras()を使うためにアプリ起動時にインスタンスを作成する
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // デバイスで使用可能なカメラのリストを取得します。
+  // カメラ起動時にこのリストから正面や背面など何のカメラを起動するか選択する
+  final cameras = await availableCameras();
+
+  // 利用可能なカメラのリストから特定のカメラを取得します
+  // first=背面カメラ
+  // TODO:firstが背面とも限らないらしいので詳細はまたあとで
+  firstCamera = cameras.firstWhere(
+        // lensDirection で 背面カメラを明示的に選ぶ
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+    // 万が一「背面カメラがない端末」でも orElse で fallback（前面カメラでも使えるように）
+    orElse: () => cameras.first,
+  );
+
+  // カメラの機能を使うためのアプリ起動時の準備
+
   runApp(const MyApp());
 }
 

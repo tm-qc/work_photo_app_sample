@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_photo_app_sample/ui/camera/take_picture_screen.dart';
+import 'config/camera_config.dart';
 import 'ui/blackboard_setting/widgets/blackboard_setting_screen.dart';
 
 class TopMenu extends StatelessWidget {
@@ -90,7 +92,17 @@ class TopMenu extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  // 公式と少し書き方が違うがNavigatorだからのようです
+                  // また画面遷移（Navigator.push）は普通は失敗しないので、try-catchはここには不要
+                  // カメラビルドのlib/ui/camera/take_picture_screen.dartのvoid initStateに記載してます
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TakePictureScreen(camera: firstCamera),
+                    ),
+                  );
+                },
                 child: Text('写真撮影'),
               ),
               // 4個目のボタン
