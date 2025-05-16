@@ -14,14 +14,14 @@ class DisplayPictureScreen extends StatelessWidget {
       body: Column(
         children: [
           // 撮影画像を画面いっぱいに表示（縦に拡張）
-          // ★なぜこれ？
+          // Image.file(...) だけだと高さが確保されない可能性がある
           Expanded(
             child: Center(
               child: Image.file(File(imagePath)), // 撮影された画像を表示
             ),
           ),
           Padding(
-            // ★EdgeInsets.allなんだったけ？
+            // EdgeInsets.all:上下左右すべてに同じサイズの余白をつけるための指定
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.save),

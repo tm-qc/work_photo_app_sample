@@ -1,5 +1,4 @@
 import 'package:camera/camera.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../utils/global_logger.dart';
@@ -61,7 +60,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     } catch (e) {
       // カメラの初期化中にエラーが起きた場合にログを出力
       logger.e('カメラの初期化に失敗しました: $e');
-      // TODO: 必要であれば、エラーメッセージを表示したり画面遷移するなどの対応を入れる
+      // ビューのsnapshot.hasErrorにtrueを渡しエラーだと伝える
       _initializeControllerFuture = Future.error(e);
     }
   }
@@ -85,11 +84,18 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       // 背景は黒＋AppBar（任意で追加）
       appBar: AppBar(title: const Text('カメラプレビュー')),
       body: FutureBuilder<void>(
-        future: _initializeControllerFuture, // カメラ初期化が完了するまで待つ
+        // カメラ初期化が完了するまで待つ
+        // 「_initializeControllerFuture（カメラ初期化処理）が完了するまで待って、
+        // それが終わったら builder: 内のUIを表示
+        future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // 初期化が完了したらプレビューを表示
             return CameraPreview(_controller);
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('カメラの初期化に失敗しました'),
+            );
           } else {
             // 初期化中はローディングスピナーを表示
             return const Center(child: CircularProgressIndicator());
@@ -108,14 +114,18 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             final XFile image = await _controller.takePicture();
 
             // この画面がまだ表示されている場合のみ（安全のため）
-            // ★この画面ってなに？カメラプレビュー？
+            // context(カメラプレビュー)がまだ表示されている場合のみというチェック
+            //
+            // なぜこのチェックが必要？
+            // 撮影ボタン押した瞬間に、瞬間的にカメラがスワイプされて～というような瞬間的な事象のクラッシュをさけるため
+            // レアケースだがあった方が安全
             if (context.mounted) {
               // 撮影した画像を表示する新しい画面に遷移（画像のパスを渡す）
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) =>
-                    // ★top_menuはMaterialPageRouteあるけど、ここにないのはなんで？
+                  // 撮影後の画像を表示するだけの画面
                     DisplayPictureScreen(imagePath: image.path),
                 ),
               );
@@ -124,7 +134,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             logger.e('写真撮影に失敗しました: $e');
           }
         },
-        // ★Icons.camera_altはどこからきてるんだっけ？既存のマテリアルデザイン？
+        // Icons.camera_altは既存のマテリアルデザインから使えるアイコン
         child: const Icon(Icons.camera_alt),
       )
     );
