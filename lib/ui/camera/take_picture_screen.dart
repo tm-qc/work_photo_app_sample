@@ -90,8 +90,20 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            // 初期化が完了したらプレビューを表示
-            return CameraPreview(_controller);
+            //カメラと黒板を重ねて表示するためのStack
+            return Stack(
+              children: [
+                // 初期化が完了したらプレビューを表示
+                CameraPreview(_controller), // 背景：カメラ
+
+                // ★ 黒板Widgetを左下に表示
+                Positioned(
+                  left: 16,
+                  bottom: 16,
+                  child: _buildBlackboard(), // 黒板Widget（未設定と表示）
+                ),
+              ],
+            );
           } else if (snapshot.hasError) {
             return const Center(
               child: Text('カメラの初期化に失敗しました'),
@@ -139,4 +151,144 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       )
     );
   }
+
+  // 黒板
+  // ★一般的に別ファイルにしない？
+  Widget _buildBlackboard() {
+    return Container(
+      width: 300, // 黒板の幅をさらに広げる
+      decoration: BoxDecoration(
+        color: const Color(0xFF2E5E4E), // ダークグリーン背景
+        border: Border.all(color: Colors.white, width: 1),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // 必要な高さだけ取るように設定
+        crossAxisAlignment: CrossAxisAlignment.stretch, // 横幅いっぱいに広げる
+        children: [
+          // 1行目：事業名
+          Row(
+            children: [
+              // 事業名ラベル
+              Container(
+                width: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    right: BorderSide(color: Colors.white, width: 1),
+                    bottom: BorderSide(color: Colors.white, width: 1),
+                  ),
+                ),
+                child: const Text(
+                  '事業名',
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+              // 事業名の値
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Colors.white, width: 1),
+                    ),
+                  ),
+                  child: const Text(
+                    '事業名の設定値',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // 2行目：現場名と林小班を横に並べる
+          IntrinsicHeight( // 高さを内容に合わせる
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 現場名ラベル
+                Container(
+                  width: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.white, width: 1),
+                      bottom: BorderSide(color: Colors.white, width: 1),
+                    ),
+                  ),
+                  child: const Text(
+                    '現場名',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+                // 現場名の値
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        right: BorderSide(color: Colors.white, width: 1),
+                        bottom: BorderSide(color: Colors.white, width: 1),
+                      ),
+                    ),
+                    child: const Text(
+                      '現場名の設定値',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                ),
+                // 林小班ラベル
+                Container(
+                  width: 60,
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      right: BorderSide(color: Colors.white, width: 1),
+                      bottom: BorderSide(color: Colors.white, width: 1),
+                    ),
+                  ),
+                  child: const Text(
+                    '林小班',
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+                // 林小班の値
+                Expanded(
+                  flex: 3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(color: Colors.white, width: 1),
+                      ),
+                    ),
+                    child: const Text(
+                      '林小班の設定値',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 3行目：作業種の設定値
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
+            alignment: Alignment.center,
+            child: const Text(
+              '作業種の設定値',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
