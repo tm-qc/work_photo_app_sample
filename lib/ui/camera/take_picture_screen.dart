@@ -155,8 +155,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // 黒板
   // ★一般的に別ファイルにしない？
   Widget _buildBlackboard() {
+    // MediaQuery.of
+    // 今の画面サイズや表示情報（幅、高さ、文字サイズなど）を取得するための仕組み
+    // MediaQuery.of(context) から取得できる情報はsize.height	画面の縦の長さなど他にもある
+    final Size previewSize = MediaQuery.of(context).size;
     return Container(
-      width: 300, // 黒板の幅をさらに広げる
+      width: previewSize.width * 0.5, // 黒板の幅をプレビューの幅の半分に設定
       decoration: BoxDecoration(
         color: const Color(0xFF2E5E4E), // ダークグリーン背景
         border: Border.all(color: Colors.white, width: 1),
@@ -290,5 +294,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       ),
     );
   }
+
 
 }
