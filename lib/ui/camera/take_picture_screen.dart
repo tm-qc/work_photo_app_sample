@@ -160,7 +160,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     // MediaQuery.of(context) から取得できる情報はsize.height	画面の縦の長さなど他にもある
     final Size previewSize = MediaQuery.of(context).size;
     return Container(
-      width: previewSize.width * 0.5, // 黒板の幅をプレビューの幅の半分に設定
+      height: previewSize.height * 0.2,// 黒板の高さを画面の20％に設定(子から参照するのに必要)
+      width: previewSize.width * 0.5, // 黒板の幅をプレビューの幅＝画面の幅の半分に設定
       decoration: BoxDecoration(
         color: const Color(0xFF2E5E4E), // ダークグリーン背景
         border: Border.all(color: Colors.white, width: 1),
@@ -168,6 +169,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min, // 中身に必要な高さだけ取るように設定
         crossAxisAlignment: CrossAxisAlignment.stretch, // Container（親の枠）の幅横幅いっぱいに広げる
+
+        // TODO:黒板の行単位の高さなどの設定については出来なかったので保留
+        // 一旦事業名の行だけ高さを指定しようとしたが、FlutterのUI構築の仕組みが予想以上に意味がわからなかった
+        // 何かしらの親要素追加が必要+ネスト深まる+閉じタグつけにくい+何が必要なのか不規則で独自性がすごい
+        // などで法則性がなく、予想以上にわからずに詰みました。
+        // 他の事終わってまた余裕あったらする
         children: [
           // 1行目：事業名
           Row(
