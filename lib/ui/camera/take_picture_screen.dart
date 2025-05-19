@@ -96,10 +96,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 // 初期化が完了したらプレビューを表示
                 CameraPreview(_controller), // 背景：カメラ
 
-                // ★ 黒板Widgetを左下に表示
+                // 黒板Widgetを左下に表示
                 Positioned(
-                  left: 16,
-                  bottom: 16,
+                  left: 0,
+                  bottom: 0,
                   child: _buildBlackboard(), // 黒板Widget（未設定と表示）
                 ),
               ],
@@ -166,8 +166,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         border: Border.all(color: Colors.white, width: 1),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, // 必要な高さだけ取るように設定
-        crossAxisAlignment: CrossAxisAlignment.stretch, // 横幅いっぱいに広げる
+        mainAxisSize: MainAxisSize.min, // 中身に必要な高さだけ取るように設定
+        crossAxisAlignment: CrossAxisAlignment.stretch, // Container（親の枠）の幅横幅いっぱいに広げる
         children: [
           // 1行目：事業名
           Row(
