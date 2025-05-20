@@ -1,8 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-import '../../utils/global_logger.dart';
+import '../../../utils/global_logger.dart';
 import 'display_picture_screen.dart';
+import 'blackboard_screen.dart';
 
 // カメラを使って写真を撮影する画面を定義する StatefulWidget
 // Flutterでは機能と画面を1つのWidgetにまとめるのが普通なので、カメラ＝画面のように扱うのでUI=Widgetで定義できる
@@ -79,6 +80,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // この中で CameraPreview() などを返してUIを作ります
   // カメラのプレビューを表示する前に、コントローラが初期化されるまで待つ必要があります。
   // カメラのプレビューを表示する。 が初期化されるまで、FutureBuilderを使用してローディングスピナーを表示します。
+  //
+  // BuildContext contextどこからわたる？
+  //　Flutterが context を自動で渡します
+  // ↓こんな感じで呼び出されるが、ここで渡してるわけではなく、ビルドの時に自動で渡るらしいです
+  // builder: (context) => TakePictureScreen(camera: firstCamera),
   Widget build(BuildContext context) {
     return Scaffold(
       // 背景は黒＋AppBar（任意で追加）
@@ -100,7 +106,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 Positioned(
                   left: 0,
                   bottom: 0,
-                  child: _buildBlackboard(), // 黒板Widget（未設定と表示）
+                  // 自作の関数なのでライフルサイクルメソッドではないので、contextを自分で渡す必要がある
+                  child: buildBlackboard(context), // 黒板Widget（未設定と表示）
                 ),
               ],
             );
@@ -154,7 +161,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
   // 黒板
   // ★一般的に別ファイルにしない？
-  Widget _buildBlackboard() {
+  Widget _buildBlackboard2() {
     // MediaQuery.of
     // 今の画面サイズや表示情報（幅、高さ、文字サイズなど）を取得するための仕組み
     // MediaQuery.of(context) から取得できる情報はsize.height	画面の縦の長さなど他にもある
@@ -177,9 +184,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         // 他の事終わってまた余裕あったらする
         children: [
           // 1行目：事業名
+          // Rowでラベルと値を横並びにして1行として扱う
+          //
+          // ContainerとExpandedで構成されるが、共通のレイアウトでそろえる場合は
+          // 小さなWidgetに切り出して使うのが一般的らしい
           Row(
             children: [
               // 事業名ラベル
+              // Container：見た目を整えるための箱
               Container(
                 width: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
@@ -195,6 +207,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 ),
               ),
               // 事業名の値
+              // Expanded：Containerで使ってない幅＝RowやColumn内で、残りのスペースを自動で広がるように使う指示するメソッド
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
