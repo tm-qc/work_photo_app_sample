@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../utils/global_logger.dart';
 import 'display_picture_screen.dart';
-import 'blackboard_screen.dart';
+import 'blackboard_widget.dart';
 
 // カメラを使って写真を撮影する画面を定義する StatefulWidget
 // Flutterでは機能と画面を1つのWidgetにまとめるのが普通なので、カメラ＝画面のように扱うのでUI=Widgetで定義できる
@@ -106,8 +106,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 Positioned(
                   left: 0,
                   bottom: 0,
-                  // 自作の関数なのでライフルサイクルメソッドではないので、contextを自分で渡す必要がある
-                  child: buildBlackboard(context), // 黒板Widget（未設定と表示）
+                  child: const BlackboardWidget(), // 黒板Widget
                 ),
               ],
             );
