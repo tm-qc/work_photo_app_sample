@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'blackboard_label.dart';
+import 'blackboard_value.dart';
 
 // カメラプレビュー上の黒板の本体Widget
 
@@ -79,21 +80,7 @@ class BlackboardWidget extends StatelessWidget {
               // widthは初期値60だが引数で設定も可能
               const BlackboardLabel(text: '事業名'),
               // 事業名の値
-              // Expanded：Containerで使ってない幅＝RowやColumn内で、残りのスペースを自動で広がるように使う指示するメソッド
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(color: Colors.white, width: 1),
-                    ),
-                  ),
-                  child: const Text(
-                    '事業名の設定値',
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                  ),
-                ),
-              ),
+              const BlackboardValue(),
             ],
           ),
 
