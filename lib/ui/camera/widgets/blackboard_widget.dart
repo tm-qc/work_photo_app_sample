@@ -46,6 +46,7 @@ class BlackboardWidget extends StatelessWidget {
       // decoration は Container に使うプロパティ（背景、枠線、角丸など）
       decoration: BoxDecoration(
         color: const Color(0xFF2E5E4E), // ダークグリーン背景
+        // top, bottom, left, rightに線を引く
         border: Border.all(color: Colors.white, width: 1),
       ),
       // child：1つのWidgetだけ渡すときに使うプロパティ
@@ -74,7 +75,7 @@ class BlackboardWidget extends StatelessWidget {
               // widthは初期値60だが引数で設定も可能
               const BlackboardLabel(text: '事業名'),
               // 事業名の値
-              const BlackboardValue(),
+              const BlackboardValue(showRightBorder:false),
             ],
           ),
 
@@ -88,7 +89,7 @@ class BlackboardWidget extends StatelessWidget {
               // 林小班ラベル
               const BlackboardLabel(text: '林小班'),
               // 値
-              const BlackboardValue(),
+              const BlackboardValue(text:"あいう", showRightBorder:false),
             ],
           ),
 

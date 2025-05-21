@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 class BlackboardValue extends StatelessWidget {
   final String text;
   final int flex;
+  final bool showRightBorder;
 
   const BlackboardValue({
     super.key,
     this.text = "未設定",
     // 必要な場合に横幅の比率を調整できる
     this.flex = 1,
+    // 右側の線が二重になる部分があるので制御用
+    this.showRightBorder = true,
   });
 
   @override
@@ -18,10 +21,12 @@ class BlackboardValue extends StatelessWidget {
       flex: flex,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
-            right: BorderSide(color: Colors.white, width: 1),
-            bottom: BorderSide(color: Colors.white, width: 1),
+            right: showRightBorder
+                ? const BorderSide(color: Colors.white, width: 1)
+                : BorderSide.none,
+            bottom: const BorderSide(color: Colors.white, width: 1),
           ),
         ),
         child: Text(
