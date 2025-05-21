@@ -20,12 +20,15 @@ class BlackboardValue extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
         decoration: const BoxDecoration(
           border: Border(
+            right: BorderSide(color: Colors.white, width: 1),
             bottom: BorderSide(color: Colors.white, width: 1),
           ),
         ),
         child: Text(
           text,
           style: const TextStyle(color: Colors.white, fontSize: 12),
+          overflow: TextOverflow.ellipsis, // 文字数が多すぎる場合に「…」で表示を切れる
+          maxLines: 1,                     // 複数行にしない
         ),
       ),
     );

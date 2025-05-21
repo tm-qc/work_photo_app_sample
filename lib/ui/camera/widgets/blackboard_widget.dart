@@ -57,11 +57,6 @@ class BlackboardWidget extends StatelessWidget {
         // Container（親の枠）の幅横幅いっぱいに子要素を広げる
         crossAxisAlignment: CrossAxisAlignment.stretch,
 
-        // TODO:黒板の行単位の高さなどの設定については出来なかったので保留
-        // 一旦事業名の行だけ高さを指定しようとしたが、FlutterのUI構築の仕組みが予想以上に意味がわからなかった
-        // 何かしらの親要素追加が必要+ネスト深まる+閉じタグつけにくい+何が必要なのか不規則で独自性がすごい
-        // などで法則性がなく、予想以上にわからずに詰みました。
-        // 他の事終わってまた余裕あったらする
 
         // children：複数の子Widgetを指定する場合に使う。childで書いたらエラーにあるので直せばOK
         // ※Row や Column は、複数のWidgetを受け取る前提で作られているので、常に children を使います。
@@ -71,7 +66,6 @@ class BlackboardWidget extends StatelessWidget {
           //
           // ContainerとExpandedで構成されるが、共通のレイアウトでそろえる場合は
           // 小さなWidgetに切り出して使うのが一般的らしい
-
           // Row：要素を横並びにする
           Row(
             children: [
@@ -85,90 +79,33 @@ class BlackboardWidget extends StatelessWidget {
           ),
 
           // 2行目：現場名と林小班を横に並べる
-          // IntrinsicHeight( // 高さを内容に合わせる
-          //   child: Row(
-          //     crossAxisAlignment: CrossAxisAlignment.stretch,
-          //     children: [
-          //       // 現場名ラベル
-          //       Container(
-          //         width: 60,
-          //         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-          //         decoration: const BoxDecoration(
-          //           border: Border(
-          //             right: BorderSide(color: Colors.white, width: 1),
-          //             bottom: BorderSide(color: Colors.white, width: 1),
-          //           ),
-          //         ),
-          //         child: const Text(
-          //           '現場名',
-          //           style: TextStyle(color: Colors.white, fontSize: 12),
-          //         ),
-          //       ),
-          //       // 現場名の値
-          //       Expanded(
-          //         flex: 3,
-          //         child: Container(
-          //           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-          //           decoration: const BoxDecoration(
-          //             border: Border(
-          //               right: BorderSide(color: Colors.white, width: 1),
-          //               bottom: BorderSide(color: Colors.white, width: 1),
-          //             ),
-          //           ),
-          //           child: const Text(
-          //             '現場名の設定値',
-          //             style: TextStyle(color: Colors.white, fontSize: 12),
-          //           ),
-          //         ),
-          //       ),
-          //       // 林小班ラベル
-          //       Container(
-          //         width: 60,
-          //         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-          //         decoration: const BoxDecoration(
-          //           border: Border(
-          //             right: BorderSide(color: Colors.white, width: 1),
-          //             bottom: BorderSide(color: Colors.white, width: 1),
-          //           ),
-          //         ),
-          //         child: const Text(
-          //           '林小班',
-          //           style: TextStyle(color: Colors.white, fontSize: 12),
-          //         ),
-          //       ),
-          //       // 林小班の値
-          //       Expanded(
-          //         flex: 3,
-          //         child: Container(
-          //           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-          //           decoration: const BoxDecoration(
-          //             border: Border(
-          //               bottom: BorderSide(color: Colors.white, width: 1),
-          //             ),
-          //           ),
-          //           child: const Text(
-          //             '林小班の設定値',
-          //             style: TextStyle(color: Colors.white, fontSize: 12),
-          //           ),
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
+          Row(
+            children: [
+              // 現場名ラベル
+              const BlackboardLabel(text: '現場名'),
+              // 値
+              const BlackboardValue(),
+              // 林小班ラベル
+              const BlackboardLabel(text: '林小班'),
+              // 値
+              const BlackboardValue(),
+            ],
+          ),
 
           // 3行目：作業種の設定値
-          // Container(
-          //   padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
-          //   alignment: Alignment.center,
-          //   child: const Text(
-          //     '作業種の設定値',
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //       fontSize: 16,
-          //       fontWeight: FontWeight.bold,
-          //     ),
-          //   ),
-          // ),
+          // 作業種だけラベルなし、値の枠の大きさが特殊なので共通パーツBlackboardValueは使わない
+          // Expanded 自体が「空間を均等に割る役割」
+          Expanded(
+            child: Align(
+              child: const Text(
+                '作業種の設定値',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            )
+          ),
         ],
       ),
     );
