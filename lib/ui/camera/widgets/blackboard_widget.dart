@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'blackboard_label.dart';
+
+// カメラプレビュー上の黒板の本体Widget
+
 // 関数で書くか、クラス化するか？
 //
 // - 本体＝関数、パーツ＝クラス:一般的
@@ -7,7 +11,7 @@ import 'package:flutter/material.dart';
 // - 両方クラスでもOK：クラスかすると無駄に長くなることもあるとのこと
 // - 両方関数：あまりしないらしい。パーツの使い回し・引数管理が面倒になりやすいとのこと
 //
-// 今回こうなってる
+// 今回最初はこうなっていた
 // lib/ui/camera/widgets/blackboard_widget.dart：黒板本体で関数で作成
 // lib/ui/camera/widgets/blackboard_label.dart：黒板本体のパーツだがクラスで作成
 //
@@ -15,6 +19,9 @@ import 'package:flutter/material.dart';
 // 両方クラスの方がなぜ片方関数？みたいにならない
 // メインの本体のほうが親でパーツより関係性は上なのに関数>クラスの関係になっておりしっくりこない
 // みたいな気がする
+//
+// → 考えた結果全部クラスにしました
+// 　やった結果そんなに手間増えないし、呼び出すときにcontextを引数に渡さなくてよかった
 
 class BlackboardWidget extends StatelessWidget {
   const BlackboardWidget({super.key});
@@ -68,27 +75,9 @@ class BlackboardWidget extends StatelessWidget {
           Row(
             children: [
               // 事業名ラベル
-              // Container：見た目を整えるための箱
-              Container(
-                width: 60,
-                // padding指定だけだが、メソッド使い分けが必要みたいです
-                // メソッド、引数名が長いし覚えにくい・・・
-                //
-                // EdgeInsets.all(8)：全方向に同じ余白	全部まとめて
-                // EdgeInsets.symmetric(horizontal: 4, vertical: 6)：上下と左右で分けたいとき
-                // EdgeInsets.only(left: 4, top: 2)：個別に設定したいとき
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    right: BorderSide(color: Colors.white, width: 1),
-                    bottom: BorderSide(color: Colors.white, width: 1),
-                  ),
-                ),
-                child: const Text(
-                  '事業名',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
+              // パーツで共通化済み
+              // widthは初期値60だが引数で設定も可能
+              const BlackboardLabel(text: '事業名'),
               // 事業名の値
               // Expanded：Containerで使ってない幅＝RowやColumn内で、残りのスペースを自動で広がるように使う指示するメソッド
               Expanded(
