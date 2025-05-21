@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_photo_app_sample/ui/camera/take_picture_screen.dart';
+import 'package:work_photo_app_sample/ui/camera/widgets/take_picture_screen.dart';
 import 'config/camera_config.dart';
 import 'ui/blackboard_setting/widgets/blackboard_setting_screen.dart';
 
