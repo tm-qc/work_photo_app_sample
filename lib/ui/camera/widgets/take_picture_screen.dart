@@ -30,7 +30,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
   // 黒板の位置を保持（初期は左下付近）
   // offset:Stackの中での相対位置。今回はカメラプレビュー内になる。Stack内のPositionedで使われてる
-  // TODO：今はカメラプレビュー上の左上になるので、初期値をカメラプレビュー上の左下にしないといけない
   Offset _blackboardPosition = const Offset(0, 0);
 
   @override
@@ -127,6 +126,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                         setState(() {
                           _isInitialPosition = false;
                           // 黒板の高さを考慮して現在位置を計算
+                          // TODO：ドラッグした最初の瞬間に少し下に下がる不自然な挙動があるが、初期位置を左上にする以外に対処ができないので保留。カメラプレビュー内の左下配置とこの挙動の修正の両立ができない
                           _blackboardPosition = Offset(0, size.height - (size.height * 0.2));
                         });
                       }
