@@ -26,6 +26,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   late CameraController _controller;
   // カメラ初期化処理の完了を待ってFuture型で受け取るプロパティを定義
   late Future<void> _initializeControllerFuture;
+  bool _isInitialPosition = true;
+
+  // 黒板の位置を保持（初期は左下付近）
+  // offset:Stackの中での相対位置。今回はカメラプレビュー内になる。Stack内のPositionedで使われてる
+  // TODO：今はカメラプレビュー上の左上になるので、初期値をカメラプレビュー上の左下にしないといけない
+  Offset _blackboardPosition = const Offset(0, 0);
 
   @override
   // 今回のカメラでなぜinitStateの上書きが必要なのか
@@ -86,6 +92,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // ↓こんな感じで呼び出されるが、ここで渡してるわけではなく、ビルドの時に自動で渡るらしいです
   // builder: (context) => TakePictureScreen(camera: firstCamera),
   Widget build(BuildContext context) {
+    // final Size previewSize = MediaQuery.of(context).size;
     return Scaffold(
       // 背景は黒＋AppBar（任意で追加）
       appBar: AppBar(title: const Text('カメラプレビュー')),
@@ -103,10 +110,38 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 CameraPreview(_controller), // 背景：カメラ
 
                 // 黒板Widgetを左下に表示
+                // ✅変更：黒板を動かせるように修正
                 Positioned(
-                  left: 0,
-                  bottom: 0,
-                  child: const BlackboardWidget(), // 黒板Widget
+                  // カメラプレビュー表示タイミングの黒板の初期位置を左下に固定、ドラッグ後は自由な位置
+                  left: _isInitialPosition ? 0 : _blackboardPosition.dx,
+                  top: _isInitialPosition ? null : _blackboardPosition.dy,
+                  bottom: _isInitialPosition ? 0 : null, //これでカメラプレビュー内の左下に固定
+                  // GestureDetector：ユーザーの操作（タップ・ドラッグなど）を検知するためのウィジェット
+                  child: GestureDetector(
+                    // ドラッグ開始時：初期位置から自由移動モードに切り替え
+                    onPanStart: (details) {
+                      if (_isInitialPosition) {
+                        // 現在の画面上の位置を取得してから自由移動モードに
+                        final RenderBox renderBox = context.findRenderObject() as RenderBox;
+                        final size = renderBox.size;
+                        setState(() {
+                          _isInitialPosition = false;
+                          // 黒板の高さを考慮して現在位置を計算
+                          _blackboardPosition = Offset(0, size.height - (size.height * 0.2));
+                        });
+                      }
+                    },
+                    // ユーザーが「ドラッグしてる最中に毎フレーム呼ばれる」関数
+                    onPanUpdate: (details) {
+                      if (!_isInitialPosition) {
+                        // ポジションをセットした後に自動でUIを再描画する状態管理
+                        setState(() {
+                          _blackboardPosition += details.delta; // ユーザーがドラッグしているときのポジションを追加
+                        });
+                      }
+                    },
+                    child: const BlackboardWidget(), // 黒板Widget
+                  ),
                 ),
               ],
             );
