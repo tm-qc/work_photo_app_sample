@@ -40,6 +40,9 @@ class BlackboardWidget extends StatelessWidget {
 
     // Container：黒板の大枠で最上の親要素で見た目（枠・色・余白）などを調整するための大箱
     return Container(
+      // 120や300など固定値はだめ？
+      // 固定値だと小さすぎる、大きすぎるがやっぱり発生するので、今のスマホの比率をベースにするのがいいらしい
+      // TODO:ゆくゆく角ドラッグで拡大縮小する予定なのでその時にまた考える
       height: previewSize.height * 0.2,// 黒板の高さを画面の20％に設定(子から参照するのに必要)
       width: previewSize.width * 0.5, // 黒板の幅をプレビューの幅＝画面の幅の半分に設定
       // decoration：「見た目（色・線・影・角丸など）」専用。サイズ指定はしない
