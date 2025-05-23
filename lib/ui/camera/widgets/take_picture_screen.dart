@@ -32,6 +32,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // offset:Stackの中での相対位置。今回はカメラプレビュー内になる。Stack内のPositionedで使われてる
   Offset _blackboardPosition = const Offset(0, 0);
 
+  // 黒板のサイズを格納するためのGlobalKey
+  // ウィジェットの位置やサイズを取得するためには、GlobalKeyを使ってアクセスする
+  final GlobalKey _blackboardKey = GlobalKey();
+
   @override
   // 今回のカメラでなぜinitStateの上書きが必要なのか
   //
@@ -120,15 +124,45 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                     // ドラッグ開始時：初期位置から自由移動モードに切り替え
                     onPanStart: (details) {
                       if (_isInitialPosition) {
-                        // 現在の画面上の位置を取得してから自由移動モードに
-                        final RenderBox renderBox = context.findRenderObject() as RenderBox;
-                        final size = renderBox.size;
-                        setState(() {
-                          _isInitialPosition = false;
-                          // 黒板の高さを考慮して現在位置を計算
-                          // TODO：ドラッグした最初の瞬間に少し下に下がる不自然な挙動があるが、初期位置を左上にする以外に対処ができないので保留。カメラプレビュー内の左下配置とこの挙動の修正の両立ができない
-                          _blackboardPosition = Offset(0, size.height - (size.height * 0.2));
-                        });
+                        // 黒板の情報
+                        // _blackboardKey は GlobalKey なので、画面全体からドラッグしてるcontext(黒板)の位置を取得
+                        // as RenderBox：型をRenderBoxにキャスト
+                        final RenderBox? renderBox = _blackboardKey.currentContext?.findRenderObject() as RenderBox?;
+
+                        // 現在のカメラプレビュー全体画面（TakePictureScreen）のルートウィジェットの描画情報
+                        // 黒板のローカル座標を「この画面の中でのどこ？」という絶対座標に変換するために下のancestorで使います
+                        final RenderBox screenBox = context.findRenderObject() as RenderBox;
+
+                        if (renderBox != null) {
+                          // 黒板の左上（0,0）が、画面全体の中でどこにあるか？を計算し座標を取得する
+                          // (= 初期状態で bottom:0 で表示されているカメラプレビュー内の左下)
+
+                          // これでドラッグした瞬間にこの値で黒板が設置されることで、初動で位置がぶれなくなる
+                          //
+                          // renderBox：黒板の情報
+                          // localToGlobal：黒板のローカル座標（Offset.zero = 左上）をancestor（ここでは画面全体screenBox）から見た絶対座標を取得
+                          // ※localToGlobal＝ローカル座標から絶対座標を取得するメソッド。globalToLocalもある
+                          // ※ancestor：このウィジェットの座標を、どの親（祖先）から見た基準で測るか？
+                          final blackboardPosition = renderBox.localToGlobal(Offset.zero, ancestor: screenBox);
+                          setState(() {
+                            _isInitialPosition = false;
+                            // 初期状態では bottom:0 で左下に置かれているので、
+                            // そのときの実際の座標を保存し、ドラッグ時の表示ブレを防ぐ
+                            _blackboardPosition = blackboardPosition;
+                          });
+                        // 万が一 renderBox が取得できなかった場合のフォールバック処理
+                        // 理論上は起きないが、保険として安全策
+                        // ここにくる場合はドラッグの初動がずれる
+                        } else {
+                          // フォールバック：黒板のサイズが取得できない場合
+                          final size = screenBox.size;
+                          setState(() {
+                            _isInitialPosition = false;
+                            // 推定位置を使用
+                            _blackboardPosition = Offset(0, size.height - (size.height * 0.2)); // (size.height * 0.2)は黒板の実際の高さ
+                            // _blackboardPosition = Offset(0, size.height - 100); // 100は黒板の推定高さ
+                          });
+                        }
                       }
                     },
                     // ユーザーが「ドラッグしてる最中に毎フレーム呼ばれる」関数
@@ -140,7 +174,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                         });
                       }
                     },
-                    child: const BlackboardWidget(), // 黒板Widget
+                    // ここがドラッグで動かす対象のWidget(=今回は黒板）
+                    child: Container(
+                      // 黒板の位置を取得するためのキーを(GlobalKey _blackboardKey)を渡す
+                      key: _blackboardKey,
+                      child: const BlackboardWidget(),
+                    ),
                   ),
                 ),
               ],
