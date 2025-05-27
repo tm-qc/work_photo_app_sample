@@ -36,6 +36,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // ウィジェットの位置やサイズを取得するためには、GlobalKeyを使ってアクセスする
   final GlobalKey _blackboardKey = GlobalKey();
 
+  // 拡大縮小用の変数
+  double _scale = 1.0;
+  double _baseScale = 1.0;
+
+  // ドラッグ用の変数
+  Offset _basePosition = Offset.zero;
+  Offset _startFocalPoint = Offset.zero;
+
   @override
   // 今回のカメラでなぜinitStateの上書きが必要なのか
   //
@@ -121,8 +129,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                   bottom: _isInitialPosition ? 0 : null, //これでカメラプレビュー内の左下に固定
                   // GestureDetector：ユーザーの操作（タップ・ドラッグなど）を検知するためのウィジェット
                   child: GestureDetector(
-                    // ドラッグ開始時：初期位置から自由移動モードに切り替え
-                    onPanStart: (details) {
+
+                    onScaleStart: (ScaleStartDetails details) {
+                      print("スケール開始: focalPoint=${details.focalPoint}");
+                      // フォーカルポイントの開始位置を記録
+                      _startFocalPoint = details.focalPoint;
+
                       if (_isInitialPosition) {
                         // 黒板の情報
                         // _blackboardKey は GlobalKey なので、画面全体からドラッグしてるcontext(黒板)の位置を取得
@@ -149,40 +161,66 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                             // 初期状態では bottom:0 で左下に置かれているので、
                             // そのときの実際の座標を保存し、ドラッグ時の表示ブレを防ぐ
                             _blackboardPosition = blackboardPosition;
+                            // 追加
+                            _basePosition = blackboardPosition;
                           });
                         // 万が一 renderBox が取得できなかった場合のフォールバック処理
                         // 理論上は起きないが、保険として安全策
                         // ここにくる場合はドラッグの初動がずれる
-                        } else {
-                          // フォールバック：黒板のサイズが取得できない場合
+                        }else{
                           final size = screenBox.size;
                           setState(() {
                             _isInitialPosition = false;
                             // 推定位置を使用
                             _blackboardPosition = Offset(0, size.height - (size.height * 0.2)); // (size.height * 0.2)は黒板の実際の高さ
                             // _blackboardPosition = Offset(0, size.height - 100); // 100は黒板の推定高さ
+                            // 追加
+                            _basePosition = _blackboardPosition;
                           });
                         }
+                      }else{
+                        // 追加
+                        // 既に自由移動モードの場合、現在の位置を基準として保存
+                        _basePosition = _blackboardPosition;
                       }
+                      // 現在のスケールを基準として保存
+                      _baseScale = _scale;
                     },
-                    // ユーザーが「ドラッグしてる最中に毎フレーム呼ばれる」関数
-                    onPanUpdate: (details) {
+
+                    onScaleUpdate: (ScaleUpdateDetails details) {
                       if (!_isInitialPosition) {
-                        // ポジションをセットした後に自動でUIを再描画する状態管理
                         setState(() {
-                          _blackboardPosition += details.delta; // ユーザーがドラッグしているときのポジションを追加
+                          // 拡大縮小の処理
+                          double newScale = _baseScale * details.scale;
+                          // スケールの制限を適用
+                          newScale = newScale.clamp(0.5, 3.0);
+                          _scale = newScale;
+
+                          // ドラッグの処理（開始位置からの差分を計算）
+                          final dragDelta = details.focalPoint - _startFocalPoint;
+                          _blackboardPosition = _basePosition + dragDelta;
+
+                          print("スケール中: scale=${details.scale}, 実際のスケール=${_scale}, position=${_blackboardPosition}");
                         });
                       }
                     },
-                    // ここがドラッグで動かす対象のWidget(=今回は黒板）
-                    child: Container(
-                      // 黒板の位置を取得するためのキーを(GlobalKey _blackboardKey)を渡す
-                      key: _blackboardKey,
-                      child: const BlackboardWidget(),
+
+                    onScaleEnd: (ScaleEndDetails details) {
+                      print("スケール終了: scale=${_scale}");
+                    },
+                    child: Transform.scale(
+                      scale: _scale,
+                      // スケールの中心点を設定（デフォルトはcenter）
+                      alignment: Alignment.center,
+                      child: Container(
+                        key: _blackboardKey,
+                        child: const BlackboardWidget(),
+                      ),
                     ),
                   ),
                 ),
               ],
+
             );
           } else if (snapshot.hasError) {
             return const Center(
@@ -233,3 +271,4 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
 }
+
