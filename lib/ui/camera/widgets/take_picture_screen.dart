@@ -120,6 +120,62 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 // 初期化が完了したらプレビューを表示
                 CameraPreview(_controller), // 背景：カメラ
 
+                // そもそもピンチイン、アウト出来ない可能性？
+                // CameraPreview との競合。ジェスチャーを先に取得する可能性
+                // CameraPreview(_controller)をコメントアウトして、かわりに以下しても変わらなかったので、結果は確認できず
+                //
+                // 多分エミュレータ+カメラプレビュー上でうまくピンチイン、アウトが出来ない可能性が高い？
+                // ボタンでの拡大はできるので、実機で試すしかなさそう？
+                // Container(color: Colors.grey),
+
+                // 拡大縮小デバッグ用ボタン（右上に配置）
+                Positioned(
+                  top: 50,
+                  right: 10,
+                  child: Column(
+                    children: [
+                      // 拡大ボタン
+                      FloatingActionButton(
+                        heroTag: "zoom_in",
+                        mini: true,
+                        onPressed: () {
+                          setState(() {
+                            _scale = (_scale * 1.2).clamp(0.5, 3.0);
+                            print("🔍 手動拡大: $_scale");
+                          });
+                        },
+                        child: Icon(Icons.zoom_in),
+                      ),
+                      SizedBox(height: 8),
+                      // 縮小ボタン
+                      FloatingActionButton(
+                        heroTag: "zoom_out",
+                        mini: true,
+                        onPressed: () {
+                          setState(() {
+                            _scale = (_scale * 0.8).clamp(0.5, 3.0);
+                            print("🔍 手動縮小: $_scale");
+                          });
+                        },
+                        child: Icon(Icons.zoom_out),
+                      ),
+                      SizedBox(height: 8),
+                      // リセットボタン
+                      FloatingActionButton(
+                        heroTag: "reset",
+                        mini: true,
+                        onPressed: () {
+                          setState(() {
+                            _scale = 1.0;
+                            print("🔍 リセット: $_scale");
+                          });
+                        },
+                        child: Icon(Icons.refresh),
+                      ),
+                    ],
+                  ),
+                ),
+
                 // 黒板Widgetを左下に表示
                 // ✅変更：黒板を動かせるように修正
                 Positioned(
@@ -129,7 +185,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                   bottom: _isInitialPosition ? 0 : null, //これでカメラプレビュー内の左下に固定
                   // GestureDetector：ユーザーの操作（タップ・ドラッグなど）を検知するためのウィジェット
                   child: GestureDetector(
-
+                    behavior: HitTestBehavior.opaque,
                     onScaleStart: (ScaleStartDetails details) {
                       print("スケール開始: focalPoint=${details.focalPoint}");
                       // フォーカルポイントの開始位置を記録
@@ -188,21 +244,19 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                     },
 
                     onScaleUpdate: (ScaleUpdateDetails details) {
-                      if (!_isInitialPosition) {
                         setState(() {
-                          // 拡大縮小の処理
-                          double newScale = _baseScale * details.scale;
-                          // スケールの制限を適用
-                          newScale = newScale.clamp(0.5, 3.0);
-                          _scale = newScale;
-
-                          // ドラッグの処理（開始位置からの差分を計算）
-                          final dragDelta = details.focalPoint - _startFocalPoint;
-                          _blackboardPosition = _basePosition + dragDelta;
-
-                          print("スケール中: scale=${details.scale}, 実際のスケール=${_scale}, position=${_blackboardPosition}");
+                          final scaleDelta = details.scale;
+                          // エミュレータだとここの判定で拡大モードに行けないみたい？
+                          if ((scaleDelta - 1.0).abs() < 0.01) {
+                            print("📱 移動モード: scaleDelta=$scaleDelta");
+                            _blackboardPosition = _basePosition + (details.focalPoint - _startFocalPoint);
+                          } else {
+                            print("🔍 拡大モード: scaleDelta=$scaleDelta");
+                            _scale = (_baseScale * scaleDelta).clamp(0.5, 3.0);
+                            print("📏 新しいスケール: $_scale");
+                          }
                         });
-                      }
+
                     },
 
                     onScaleEnd: (ScaleEndDetails details) {
@@ -210,13 +264,13 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                     },
                     child: Transform.scale(
                       scale: _scale,
-                      // スケールの中心点を設定（デフォルトはcenter）
                       alignment: Alignment.center,
                       child: Container(
                         key: _blackboardKey,
+                        color: Colors.transparent,
                         child: const BlackboardWidget(),
                       ),
-                    ),
+                    )
                   ),
                 ),
               ],
