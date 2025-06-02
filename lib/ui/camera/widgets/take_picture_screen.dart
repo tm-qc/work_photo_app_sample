@@ -428,6 +428,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                       // - _buildCornerHandle:ハンドル描画メソッド
                       // - _buildCornerHandle：四隅ハンドルのドラッグ開始処理でどこの角か？を渡してる
                       // - _handleCornerDragUpdate:四隅ハンドルのドラッグ中の縮小拡大の処理の判別でどこの角か？を_buildCornerHandleから受け取っている
+                      // TODO:引数の引き渡しが多く、依存度が高いように感じるので、メソッドのファイル分け整理後に改善が必要かもしれない
                       _buildCornerHandle('topLeft'),     // 左上
                       _buildCornerHandle('topRight'),    // 右上
                       _buildCornerHandle('bottomLeft'),  // 左下
