@@ -249,124 +249,18 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   // ==============================================
-  // 📱 黒板本体の移動処理メソッド群
-  // ==============================================
-
-  // 黒板本体のドラッグ開始処理
-  // 初期位置（bottom配置）から絶対座標への変換も含む
-  void _handleBlackboardDragStart(DragStartDetails details) {
-    if (_isResizing) return; // リサイズ中は移動不可
-    print("📱 黒板移動開始 - タップ位置: ${details.globalPosition}");
-
-    // 📍 重要：初期位置の場合の座標変換処理
-    // 初期状態では「bottom: 0」で配置されているため、絶対座標に変換する必要がある
-    if (_isInitialPosition) {
-      // 黒板の情報
-      // _blackboardKey は GlobalKey なので、画面全体からドラッグしてるcontext(黒板)の位置を取得
-      // as RenderBox：型をRenderBoxにキャスト
-      final RenderBox? renderBox = _blackboardKey.currentContext?.findRenderObject() as RenderBox?;
-
-      // 現在のカメラプレビュー全体画面（TakePictureScreen）のルートウィジェットの描画情報
-      // 黒板のローカル座標を「この画面の中でのどこ？」という絶対座標に変換するために下のancestorで使います
-      final RenderBox screenBox = context.findRenderObject() as RenderBox;
-
-      if (renderBox != null) {
-        // 黒板の現在の画面上での絶対座標を取得
-        // 黒板の左上（0,0）が、画面全体の中でどこにあるか？を計算し座標を取得する
-        // (= 初期状態で bottom:0 で表示されているカメラプレビュー内の左下)
-        //
-        // これでドラッグした瞬間にこの値で黒板が設置されることで、初動で位置がぶれなくなる
-        //
-        // renderBox：黒板の情報
-        // localToGlobal：黒板のローカル座標（Offset.zero = 左上）をancestor（ここでは画面全体screenBox）から見た絶対座標を取得
-        // ※localToGlobal＝ローカル座標から絶対座標を取得するメソッド。globalToLocalもある
-        // ※ancestor：このウィジェットの座標を、どの親（祖先）から見た基準で測るか？
-        final blackboardPosition = renderBox.localToGlobal(Offset.zero, ancestor: screenBox);
-        print("🔧 初期位置変換: bottom配置 → 絶対座標${blackboardPosition}");
-
-        // 🔥 重要：setStateの外で値を設定してから、最後に一度だけsetStateを呼ぶ
-        // これにより、複数回のsetState呼び出しによる予期しない動作を防ぐ+パフォーマンス向上
-        // 中間状態でのUIの不整合を防止
-        // バグの原因にはならないしベストプラクティスらしい
-        // TODO:状態の判定地を代入するところは共通化したほうが良さそうなので、余裕あるときにする
-        _isInitialPosition = false;
-        _blackboardPosition = blackboardPosition;
-        _dragStartPosition = details.globalPosition;
-        _dragStartBlackboardPosition = blackboardPosition;
-        _isDragging = true;
-
-        setState(() {}); // 状態更新
-        return;
-      } else {
-        // 万が一 renderBox が取得できなかった場合のフォールバック処理
-        // 理論上は起きないが、保険として安全策
-        // ここにくる場合はドラッグの初動がずれる
-        final size = screenBox.size;
-        final fallbackPosition = Offset(0, size.height - _blackboardHeight);
-        print("⚠️ フォールバック位置: ${fallbackPosition}");
-
-        _isInitialPosition = false;
-        _blackboardPosition = fallbackPosition;
-        _dragStartPosition = details.globalPosition;
-        _dragStartBlackboardPosition = fallbackPosition;
-        _isDragging = true;
-
-        setState(() {});
-        return;
-      }
-    }
-
-    // 既に絶対座標モードの場合の通常処理
-    print("🔧 通常ドラッグ開始: 現在位置${_blackboardPosition}");
-    setState(() {
-      _isDragging = true;
-      _dragStartPosition = details.globalPosition;
-      _dragStartBlackboardPosition = _blackboardPosition;
-    });
-  }
-
-  // 黒板本体のドラッグ更新処理
-  void _handleBlackboardDragUpdate(DragUpdateDetails details) {
-    if (!_isDragging || _isResizing) return;
-
-    // 現在のタッチ位置 - 開始時のタッチ位置 = 移動量
-    final delta = details.globalPosition - _dragStartPosition;
-
-    // 🔥 重要：異常に大きなdeltaは無視
-    // 初期位置変換直後に稀に発生する大きなジャンプを防ぐ
-    // TODO：固定値では各機器に柔軟に対応できなさそうなので、画面サイズに対する割合に変更予定。カメラプレビューに対して幅25%、高さ20%程度が適切？
-    if (delta.distance > 100) {
-      print("⚠️ 異常なdelta検出: ${delta} - 無視します");
-      return;
-    }
-
-    setState(() {
-      // 開始時の黒板位置 + 移動量 = 新しい黒板位置
-      _blackboardPosition = _dragStartBlackboardPosition + delta;
-    });
-
-    print("📱 ドラッグ更新: pos=${_blackboardPosition}, delta=${delta}");
-  }
-
-  // 黒板本体のドラッグ終了処理
-  void _handleBlackboardDragEnd() {
-    print("📱 黒板移動終了");
-    setState(() {
-      _isDragging = false; // ドラッグモードOFF
-    });
-  }
-
-  // ==============================================
   // 🎨 UI部品作成メソッド
   // ==============================================
 
   // 四隅のリサイズハンドルを作成するメソッド
   // [corner] どの角か（'topLeft', 'topRight', 'bottomLeft', 'bottomRight'）
-  // 戻り値：配置済みのハンドルWidget
+  // 戻り値：角丸配置済みのハンドルWidget
   Widget _buildCornerHandle(String corner) {
     return Positioned(
       // 角の位置に応じてtop/bottom、left/rightを設定
       // contains：文字列に特定の文字が含まれているかをチェックするメソッド（今回は引数のcornerに入ってる文字を見ている）
+
+      // 角丸の描画位置をtop,bottom,left,rightそれぞれで設定
       top: corner.contains('top') ? -8 : null,     // 上側の角なら上端から-8px
       bottom: corner.contains('bottom') ? -8 : null, // 下側の角なら下端から-8px
       left: corner.contains('Left') ? -8 : null,   // 左側の角なら左端から-8px
@@ -376,25 +270,15 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         onPanStart: (details) => _handleCornerDragStart(corner, details),
         onPanUpdate: _handleCornerDragUpdate,
         onPanEnd: (_) => _handleCornerDragEnd(),
+
+        // 角丸のレイアウト
         child: Container(
           width: 16,
           height: 16,
           decoration: BoxDecoration(
-            color: Colors.blue,                    // ハンドルの色
-            border: Border.all(color: Colors.white, width: 2), // 白い境界線
-            borderRadius: BorderRadius.circular(8), // 角丸
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,             // 影の色
-                blurRadius: 4,                     // ぼかし
-                offset: Offset(1, 1),              // 影の位置
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.drag_indicator,                  // ドラッグアイコン
-            size: 8,
-            color: Colors.white,
+            color: Colors.blue,// ハンドルの色
+            border: Border.all(color: Colors.white, width: 2),// 白い境界線
+            borderRadius: BorderRadius.circular(8),// 角丸
           ),
         ),
       ),
@@ -407,7 +291,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('カメラプレビューああ')),
+      appBar: AppBar(title: const Text('カメラプレビュー')),
       body: FutureBuilder<void>(
         future: _initializeControllerFuture, // カメラ初期化の完了を待つ
         builder: (context, snapshot) {
@@ -539,6 +423,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                       // 🔧 四隅のリサイズハンドル
                       // ===============================
                       // 四隅ドラッグの拡大縮小に必要な引数
+                      //
+                      // _buildCornerHandleに渡す第一引数(String corner)の利用箇所について
+                      // - _buildCornerHandle:ハンドル描画メソッド
+                      // - _buildCornerHandle：四隅ハンドルのドラッグ開始処理でどこの角か？を渡してる
+                      // - _handleCornerDragUpdate:四隅ハンドルのドラッグ中の縮小拡大の処理の判別でどこの角か？を_buildCornerHandleから受け取っている
                       _buildCornerHandle('topLeft'),     // 左上
                       _buildCornerHandle('topRight'),    // 右上
                       _buildCornerHandle('bottomLeft'),  // 左下
