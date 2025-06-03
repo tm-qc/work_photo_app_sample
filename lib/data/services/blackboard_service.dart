@@ -64,8 +64,8 @@ class BlackboardService {
   /// 2. 画面全体での絶対座標に変換
   /// 3. 絶対座標配置モードに切り替え
   ///
-  /// 【🚨 重要な修正点】
-  /// 元のコードと同じ座標変換ロジックを使用
+  /// 【🚨 重要】
+  /// 元のコードと全く同じロジックを使用（localToGlobalをそのまま使用）
   void _convertFromInitialPosition(
       CameraModel model,
       BuildContext context,
@@ -78,13 +78,12 @@ class BlackboardService {
     final RenderBox screenBox = context.findRenderObject() as RenderBox;
 
     if (renderBox != null) {
-      // 🔧 元のコードと同じ座標変換を使用
-      // localToGlobal: 指定したancestor（screenBox）から見た絶対座標を取得
+      // 🔧 元のコードと全く同じ座標変換を使用
+      // localToGlobal：黒板のローカル座標（Offset.zero = 左上）をancestor（ここでは画面全体screenBox）から見た絶対座標を取得
       final blackboardPosition = renderBox.localToGlobal(Offset.zero, ancestor: screenBox);
-
       print("🔧 初期位置変換: bottom配置 → 絶対座標${blackboardPosition}");
 
-      // 絶対座標配置モードに切り替え
+      // 🔧 元のコードと全く同じ状態更新
       model.isInitialPosition = false;
       model.blackboardPosition = blackboardPosition;
       model.dragStartPosition = globalPosition;
@@ -92,8 +91,7 @@ class BlackboardService {
       model.isDragging = true;
 
     } else {
-      // RenderBoxが取得できない場合のフォールバック処理
-      // 🔧 元のコードと同じフォールバック計算を使用
+      // 🔧 元のコードと全く同じフォールバック処理
       final size = screenBox.size;
       final fallbackPosition = Offset(0, size.height - model.blackboardHeight);
 

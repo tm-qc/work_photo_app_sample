@@ -2,24 +2,13 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import '../../../domain/models/camera_model.dart';
 import '../../../data/services/camera_service.dart';
-import '../../../data/services/blackboard_service.dart';
 import '../../../utils/global_logger.dart';
 
 /// カメラ画面のViewModel（ChangeNotifier）
 ///
-/// 【役割】
-/// - CameraServiceとBlackboardServiceの統合管理
-/// - UIからの操作を受け取りServiceに委譲
-/// - ModelとServiceの状態をUIに通知（ChangeNotifier経由）
-/// - ライフサイクル管理（初期化・終了処理）
-///
-/// 【利用想定】
-/// Screen側でChangeNotifierProviderを使ってこのViewModelを管理
-/// UIの状態変更は全てこのViewModelを通して実行
-///
-/// 【ChangeNotifierとは】
-/// Flutter標準の状態管理クラス
-/// notifyListeners()により、リスナー登録されたWidgetに変更を自動通知
+/// 【🔧 重要な変更】
+/// BlackboardServiceを使わず、元のコードのロジックを直接ViewModelに実装
+/// これにより元のコードと同じ動作を保証
 class CameraViewModel extends ChangeNotifier {
 
   // ==============================================
@@ -30,10 +19,6 @@ class CameraViewModel extends ChangeNotifier {
   /// カメラの初期化・撮影・リソース管理を委譲
   final CameraService _cameraService;
 
-  /// 黒板操作を担当するサービス
-  /// 黒板の移動・リサイズ・座標計算を委譲
-  final BlackboardService _blackboardService;
-
   /// 現在の状態を保持するModel
   /// UIはこのModelの値を参照して描画
   CameraModel _state;
@@ -43,18 +28,9 @@ class CameraViewModel extends ChangeNotifier {
   // ==============================================
 
   /// ViewModelのコンストラクタ
-  ///
-  /// 【引数】
-  /// [cameraService]: カメラ操作サービス（通常は外部から注入）
-  /// [blackboardService]: 黒板操作サービス（通常は外部から注入）
-  ///
-  /// 【初期化】
-  /// 空のCameraModelで状態管理を開始
   CameraViewModel({
     CameraService? cameraService,
-    BlackboardService? blackboardService,
   })  : _cameraService = cameraService ?? CameraService(),
-        _blackboardService = blackboardService ?? BlackboardService(),
         _state = CameraModel();
 
   // ==============================================
@@ -62,22 +38,12 @@ class CameraViewModel extends ChangeNotifier {
   // ==============================================
 
   /// 現在の状態を取得（読み取り専用）
-  ///
-  /// 【利用想定】
-  /// Screen側でViewModelの状態を参照
-  /// 例：viewModel.state.blackboardPosition
   CameraModel get state => _state;
 
   /// カメラコントローラーを取得（読み取り専用）
-  ///
-  /// 【利用想定】
-  /// CameraPreview(viewModel.controller) でプレビュー表示
   CameraController? get controller => _state.controller;
 
   /// カメラ初期化Futureを取得（読み取り専用）
-  ///
-  /// 【利用想定】
-  /// FutureBuilder<void>(future: viewModel.initializeFuture, ...)
   Future<void>? get initializeFuture => _state.initializeControllerFuture;
 
   /// 黒板の現在位置を取得
@@ -103,18 +69,6 @@ class CameraViewModel extends ChangeNotifier {
   // ==============================================
 
   /// カメラの初期化
-  ///
-  /// 【処理の流れ】
-  /// 1. CameraServiceでカメラ初期化
-  /// 2. 初期化結果をModelに反映
-  /// 3. UI側に状態変更を通知（notifyListeners）
-  ///
-  /// 【呼び出し元】
-  /// Screen.initState() から呼ばれる
-  ///
-  /// 【引数】
-  /// [camera]: 使用するカメラデバイス
-  /// [resolutionPreset]: 画質設定（オプション）
   Future<void> initializeCamera(
       CameraDescription camera, {
         ResolutionPreset resolutionPreset = ResolutionPreset.medium,
@@ -149,16 +103,6 @@ class CameraViewModel extends ChangeNotifier {
   }
 
   /// 写真撮影
-  ///
-  /// 【処理の流れ】
-  /// 1. CameraServiceで撮影実行
-  /// 2. 撮影データ（XFile）を返却
-  ///
-  /// 【呼び出し元】
-  /// Screen.FloatingActionButton.onPressed から呼ばれる
-  ///
-  /// 【戻り値】
-  /// Future<XFile>: 撮影された画像ファイル
   Future<XFile> takePicture() async {
     try {
       logger.i('写真撮影を開始します');
@@ -176,196 +120,171 @@ class CameraViewModel extends ChangeNotifier {
   }
 
   /// カメラの利用可能性チェック
-  ///
-  /// 【用途】
-  /// UI表示前にカメラが利用可能かを確認
-  /// 撮影ボタンの有効/無効切り替えなど
-  ///
-  /// 【戻り値】
-  /// bool: true=利用可能, false=利用不可
   bool isCameraAvailable() {
     return _cameraService.isAvailable();
   }
 
   // ==============================================
-  // 🎯 黒板移動関連の操作メソッド
+  // 🎯 黒板移動関連の操作メソッド（元のコードから直接移植）
   // ==============================================
 
   /// 黒板移動の開始処理
   ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceで移動開始処理
-  /// 2. Model状態を更新（isDragging = true など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.GestureDetector.onPanStart から呼ばれる
-  ///
-  /// 【引数】
-  /// [details]: ドラッグ開始時の詳細情報
-  /// [context]: 座標変換に必要なコンテキスト
+  /// 【🔧 重要】
+  /// 元のonPanStartロジックを完全に移植
+  /// setState()をnotifyListeners()に置き換えただけ
   void onPanStart(DragStartDetails details, BuildContext context) {
-    // BlackboardServiceに移動開始処理を委譲
-    _blackboardService.startDragging(
-      _state,
-      details,
-      context,
-      _state.blackboardKey,
-    );
+    if (_state.isResizing) return; // リサイズ中は移動処理をスキップ
+    print("スケール開始: focalPoint=${details.globalPosition}");
 
-    // UI更新をトリガー
-    notifyListeners();
+    // 🔧 元のコードと完全に同じ初期位置変換処理
+    if (_state.isInitialPosition) {
+      // 画面全体からドラッグしてるcontext(黒板)の位置を取得
+      final RenderBox? renderBox = _state.blackboardKey.currentContext?.findRenderObject() as RenderBox?;
+      // 現在のカメラプレビュー全体画面（TakePictureScreen）のルートウィジェットの描画情報
+      final RenderBox screenBox = context.findRenderObject() as RenderBox;
+      if (renderBox != null) {
+        // localToGlobal：黒板のローカル座標（Offset.zero = 左上）をancestor（ここでは画面全体screenBox）から見た絶対座標を取得
+        final blackboardPosition = renderBox.localToGlobal(Offset.zero, ancestor: screenBox);
+        print("🔧 初期位置変換: bottom配置 → 絶対座標${blackboardPosition}");
+
+        // 🔧 元のsetState()と同じ効果をnotifyListeners()で実現
+        _state.isInitialPosition = false;
+        _state.blackboardPosition = blackboardPosition;
+        _state.dragStartPosition = details.globalPosition;
+        _state.dragStartBlackboardPosition = blackboardPosition;
+        _state.isDragging = true;
+        notifyListeners();
+      } else {
+        // フォールバック処理
+        final size = screenBox.size;
+        final fallbackPosition = Offset(0, size.height - _state.blackboardHeight);
+
+        _state.isInitialPosition = false;
+        _state.blackboardPosition = fallbackPosition;
+        _state.dragStartPosition = details.globalPosition;
+        _state.dragStartBlackboardPosition = fallbackPosition;
+        _state.isDragging = true;
+        notifyListeners();
+      }
+    } else {
+      // 通常の移動開始
+      _state.isDragging = true;
+      _state.dragStartPosition = details.globalPosition;
+      _state.dragStartBlackboardPosition = _state.blackboardPosition;
+      notifyListeners();
+    }
   }
 
   /// 黒板移動の更新処理
   ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceで位置計算
-  /// 2. Model状態を更新（blackboardPosition など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.GestureDetector.onPanUpdate から呼ばれる
+  /// 【🔧 重要】
+  /// 元のonPanUpdateロジックを完全に移植
   void onPanUpdate(DragUpdateDetails details) {
-    // BlackboardServiceに移動更新処理を委譲
-    _blackboardService.updateDragging(_state, details);
+    if (!_state.isDragging || _state.isResizing) return;
 
-    // UI更新をトリガー
+    // 🔧 元のコードと完全に同じ計算
+    // 「開始時の黒板位置」+「指がどれだけ動いたか」=「新しい黒板位置」
+    // details.globalPosition: 現在のタッチ位置（グローバル座標）
+    // _dragStartPosition: ドラッグ開始時のタッチ位置
+    //
+    // details.globalPosition - _dragStartPosition: 指がどれだけ移動したか（移動量
+    final newPosition = _state.dragStartBlackboardPosition + (details.globalPosition - _state.dragStartPosition);
+
+    _state.blackboardPosition = newPosition;
     notifyListeners();
   }
 
   /// 黒板移動の終了処理
   ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceで移動終了処理
-  /// 2. Model状態を更新（isDragging = false など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.GestureDetector.onPanEnd から呼ばれる
+  /// 【🔧 重要】
+  /// 元のonPanEndロジックを完全に移植
   void onPanEnd(DragEndDetails details) {
-    // BlackboardServiceに移動終了処理を委譲
-    _blackboardService.endDragging(_state);
-
-    // UI更新をトリガー
+    print("スケール終了");
+    _state.isDragging = false;
     notifyListeners();
   }
 
   // ==============================================
-  // 📏 黒板リサイズ関連の操作メソッド
+  // 📏 黒板リサイズ関連の操作メソッド（元のコードから直接移植）
   // ==============================================
 
   /// 黒板リサイズの開始処理
-  ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceでリサイズ開始処理
-  /// 2. Model状態を更新（isResizing = true, resizeMode など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.CornerHandle.onPanStart から呼ばれる
-  ///
-  /// 【引数】
-  /// [corner]: 操作する角（'topLeft', 'topRight', 'bottomLeft', 'bottomRight'）
-  /// [details]: ドラッグ開始時の詳細情報
   void onCornerDragStart(String corner, DragStartDetails details) {
-    print("🔧 ViewModel: リサイズ開始 - $corner");
+    print("🔧 リサイズ開始: $corner");
 
-    // BlackboardServiceにリサイズ開始処理を委譲
-    _blackboardService.startResize(_state, corner, details);
-
-    // UI更新をトリガー
+    _state.isResizing = true;
+    _state.resizeMode = corner;
+    _state.dragStartPosition = details.globalPosition;
+    _state.dragStartSize = Size(_state.blackboardWidth, _state.blackboardHeight);
+    _state.dragStartBlackboardPosition = _state.blackboardPosition;
     notifyListeners();
   }
 
   /// 黒板リサイズの更新処理
-  ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceでサイズ・位置計算
-  /// 2. Model状態を更新（blackboardWidth, blackboardHeight, blackboardPosition など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.CornerHandle.onPanUpdate から呼ばれる
   void onCornerDragUpdate(DragUpdateDetails details) {
-    // BlackboardServiceにリサイズ更新処理を委譲
-    _blackboardService.updateResize(_state, details);
+    if (!_state.isResizing) return;
 
-    // UI更新をトリガー
+    // 現在のタッチ位置 - 開始時のタッチ位置 = 移動量
+    final delta = details.globalPosition - _state.dragStartPosition;
+
+    // 🔧 元のコードと同じswitch文による角別処理
+    switch (_state.resizeMode) {
+      case 'topLeft':
+        final newWidth = (_state.dragStartSize.width - delta.dx).clamp(100.0, 400.0);
+        final newHeight = (_state.dragStartSize.height - delta.dy).clamp(80.0, 300.0);
+        _state.blackboardWidth = newWidth;
+        _state.blackboardHeight = newHeight;
+        _state.blackboardPosition = Offset(
+          _state.dragStartBlackboardPosition.dx + (_state.dragStartSize.width - newWidth),
+          _state.dragStartBlackboardPosition.dy + (_state.dragStartSize.height - newHeight),
+        );
+        break;
+
+      case 'topRight':
+        final newWidth = (_state.dragStartSize.width + delta.dx).clamp(100.0, 400.0);
+        final newHeight = (_state.dragStartSize.height - delta.dy).clamp(80.0, 300.0);
+        _state.blackboardWidth = newWidth;
+        _state.blackboardHeight = newHeight;
+        _state.blackboardPosition = Offset(
+          _state.dragStartBlackboardPosition.dx,
+          _state.dragStartBlackboardPosition.dy + (_state.dragStartSize.height - newHeight),
+        );
+        break;
+
+      case 'bottomLeft':
+        final newWidth = (_state.dragStartSize.width - delta.dx).clamp(100.0, 400.0);
+        final newHeight = (_state.dragStartSize.height + delta.dy).clamp(80.0, 300.0);
+        _state.blackboardWidth = newWidth;
+        _state.blackboardHeight = newHeight;
+        _state.blackboardPosition = Offset(
+          _state.dragStartBlackboardPosition.dx + (_state.dragStartSize.width - newWidth),
+          _state.dragStartBlackboardPosition.dy,
+        );
+        break;
+
+      case 'bottomRight':
+        _state.blackboardWidth = (_state.dragStartSize.width + delta.dx).clamp(100.0, 400.0);
+        _state.blackboardHeight = (_state.dragStartSize.height + delta.dy).clamp(80.0, 300.0);
+        break;
+    }
+
     notifyListeners();
+    print("📏 リサイズ中: ${_state.blackboardWidth.toInt()}x${_state.blackboardHeight.toInt()}");
   }
 
   /// 黒板リサイズの終了処理
-  ///
-  /// 【処理の流れ】
-  /// 1. BlackboardServiceでリサイズ終了処理
-  /// 2. Model状態を更新（isResizing = false, resizeMode = '' など）
-  /// 3. UI側に状態変更を通知
-  ///
-  /// 【呼び出し元】
-  /// Screen.CornerHandle.onPanEnd から呼ばれる
   void onCornerDragEnd() {
-    print("🔧 ViewModel: リサイズ終了");
-
-    // BlackboardServiceにリサイズ終了処理を委譲
-    _blackboardService.endResize(_state);
-
-    // UI更新をトリガー
+    print("🔧 リサイズ終了: ${_state.blackboardWidth.toInt()}x${_state.blackboardHeight.toInt()}");
+    _state.isResizing = false;
+    _state.resizeMode = '';
     notifyListeners();
-  }
-
-  // ==============================================
-  // 🔧 ユーティリティ・状態管理メソッド
-  // ==============================================
-
-  /// 黒板の境界チェック・位置調整
-  ///
-  /// 【用途】
-  /// 黒板が画面外に出ないよう位置を調整
-  /// 画面サイズ変更時などに呼び出し
-  ///
-  /// 【引数】
-  /// [screenSize]: 現在の画面サイズ
-  void constrainBlackboardPosition(Size screenSize) {
-    final constrainedPosition = _blackboardService.constrainPosition(_state, screenSize);
-    _state.blackboardPosition = constrainedPosition;
-    notifyListeners();
-  }
-
-  /// デバッグ情報の取得
-  ///
-  /// 【用途】
-  /// 開発時のトラブルシューティング
-  /// デバッグ画面での状態表示
-  ///
-  /// 【戻り値】
-  /// Map<String, dynamic>: 統合された状態情報
-  Map<String, dynamic> getDebugInfo() {
-    return {
-      'camera': _cameraService.getCameraStatus(),
-      'blackboard': _blackboardService.getBlackboardStatus(_state),
-      'timestamp': DateTime.now().toIso8601String(),
-    };
   }
 
   // ==============================================
   // 🧹 ライフサイクル管理
   // ==============================================
 
-  /// リソースの解放処理
-  ///
-  /// 【処理内容】
-  /// 1. CameraServiceのリソース解放
-  /// 2. Model内のリソース解放
-  /// 3. ChangeNotifierのリソース解放
-  /// 4. メモリリークの防止
-  ///
-  /// 【呼び出し元】
-  /// Screen.dispose() から呼ばれる
-  ///
-  /// 【重要】
-  /// ChangeNotifierのdisposeをオーバーライドし、
-  /// 親クラスのdisposeも必ず呼び出す
   @override
   void dispose() {
     logger.i('CameraViewModelのリソースを解放します');
