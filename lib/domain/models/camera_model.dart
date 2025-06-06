@@ -1,8 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
-/// カメラ画面の状態を管理するModelクラス
-/// TakePictureScreenStateのプロパティをこちらに移植
+/// カメラ画面の状態を管理する値をもつためのModelクラス
 class CameraModel {
   // ==============================================
   // 📱 カメラ関連のプロパティ
@@ -10,12 +9,10 @@ class CameraModel {
 
   /// カメラを制御するためのコントローラー
   /// カメラの初期化、プレビュー表示、撮影処理を担当
-  /// 🔧 修正: lateを削除してnullable型に変更
   CameraController? controller;
 
   /// カメラ初期化の非同期処理のFuture
   /// カメラ初期化完了を待つためのFuture型プロパティ
-  /// 🔧 修正: lateを削除してnullable型に変更
   Future<void>? initializeControllerFuture;
 
   // ==============================================
@@ -81,15 +78,4 @@ class CameraModel {
   /// CameraModelのコンストラクタ
   /// 必要に応じて初期値を設定
   CameraModel();
-
-  // ==============================================
-  // 🧹 リソース解放
-  // ==============================================
-
-  /// リソースの解放処理
-  /// カメラコントローラーの解放を行う
-  void dispose() {
-    // 🔧 修正: nullチェックを追加
-    controller?.dispose();
-  }
 }

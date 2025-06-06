@@ -2,20 +2,24 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import '../view_model/camera_view_model.dart';
 import '../../../utils/global_logger.dart';
+import 'blackboard_interactive_widget.dart';
+import 'blackboard_size_display.dart';
 import 'display_picture_screen.dart';
-import 'blackboard_widget.dart';
 
 /// カメラプレビューと黒板の表示・操作を行うメイン画面 StatefulWidget
-///
-/// 【🔧 重要な変更】
-/// 元のコードと全く同じScaffold + FutureBuilder構造を維持
-/// ViewModelは状態管理のみに使用し、UI構造は変更しない
 class TakePictureScreen extends StatefulWidget {
+
   /// コンストラクタ
   /// camera という変数を外から必ず（required）受け取る
+  // super.keyについて
+  // 親Widget(継承元)から同時に同じ子Widgetを複数表示するときに、内部で処理、値を識別するために使われる
+  // なお、以下の場合はScreenからkeyを渡さなくてもOK。その場合nullが渡る
+  //
+  // - Navigator.pushで新しい画面スタックに追加=同時に同じWidgetを複数表示にならない
+  // - 一意性の問題が発生しない仕様
   const TakePictureScreen({super.key, required this.camera});
 
-  /// 利用するカメラ（前面カメラ or 背面カメラ）を外部から渡す
+  // 利用するカメラ（前面カメラ or 背面カメラ）を外部から渡す
   final CameraDescription camera;
 
   @override
@@ -23,10 +27,6 @@ class TakePictureScreen extends StatefulWidget {
 }
 
 /// カメラ画面の状態管理クラス（UI専用）
-///
-/// 【🔧 重要な変更】
-/// 元のコードと同じbuild構造を維持
-/// contextの参照先を元のコードと同じにする
 class TakePictureScreenState extends State<TakePictureScreen> {
 
   // ==============================================
@@ -34,35 +34,41 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   // ==============================================
 
   /// カメラ操作のViewModel
-  /// 全てのビジネスロジックをこのViewModelに委譲
+  // ViewModel
+  // - ビジネスロジック（Service）を参照し結果をScreenに渡す
+  // - 状態管理はViewModelに定義する
   late CameraViewModel _viewModel;
 
   // ==============================================
   // 🏗️ ライフサイクル管理
   // ==============================================
 
+  ///初期化メソッド
   @override
   void initState() {
+    //親のinitStateをoverrideしてるので親も動かす
     super.initState();
 
     // ViewModelを初期化
     _viewModel = CameraViewModel();
 
-    // ViewModelの状態変更を監視（UI更新のため）
+    // ViewModelの状態変更を監視し変更があれば通知し変更をUIを更新するための定義（定型文）
+    // ViewModelでChangeNotifierを継承してるから変更が検知できる
     _viewModel.addListener(_onViewModelChanged);
 
     // カメラ初期化をViewModelに委譲
     _initializeCamera();
   }
 
+  /// メモリ解放
+  // Widgetがoff=カメラが閉じた時に動く
   @override
   void dispose() {
     // ViewModelの監視を停止
     _viewModel.removeListener(_onViewModelChanged);
-
-    // ViewModelのリソースを解放
+    // ViewModelのメモリ開放を動かす
     _viewModel.dispose();
-
+    // 継承した親クラスのメモリに残るものを解放
     super.dispose();
   }
 
@@ -70,7 +76,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   void _onViewModelChanged() {
     if (mounted) {  // 画面がまだ表示されている場合のみ更新
       setState(() {
-        // ViewModelの状態が変更されたのでUIを再描画
+        // ViewModelの状態が変更されたのでUIを再描画=初期化
       });
     }
   }
@@ -78,6 +84,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   /// カメラ初期化処理
   Future<void> _initializeCamera() async {
     try {
+      // widget.camera
+      // StatefulWidgetクラスのインスタンスを参照するプロパティ
+      // 今回はclass TakePictureScreen extends StatefulWidgetのcameraを参照
       await _viewModel.initializeCamera(widget.camera);
     } catch (e) {
       // エラーログはViewModelで出力済み
@@ -85,140 +94,47 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     }
   }
 
-  // ==============================================
-  // 🎨 UI部品作成メソッド（元のコードから移植）
-  // ==============================================
-
-  /// 四隅のリサイズハンドルを作成するメソッド
-  ///
-  /// 【元のコードから完全移植】
-  /// UIの見た目は変更せず、操作のみViewModelに委譲
-  Widget _buildCornerHandle(String corner) {
-    return Positioned(
-      // 角の位置に応じてtop/bottom、left/rightを設定
-      top: corner.contains('top') ? -8 : null,
-      bottom: corner.contains('bottom') ? -8 : null,
-      left: corner.contains('Left') ? -8 : null,
-      right: corner.contains('Right') ? -8 : null,
-      child: GestureDetector(
-        // ドラッグ操作をViewModelに転送
-        onPanStart: (details) => _viewModel.onCornerDragStart(corner, details),
-        onPanUpdate: _viewModel.onCornerDragUpdate,
-        onPanEnd: (_) => _viewModel.onCornerDragEnd(),
-
-        // 角丸のレイアウト（UIのみ）
-        child: Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            border: Border.all(color: Colors.white, width: 2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      ),
-    );
-  }
 
   // ==============================================
   // 🏗️ メインのUI構築（元のコードから完全移植）
   // ==============================================
 
+  /// カメラプレビューメインをbuild
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('カメラプレビュー')),
+      // 「body大枠にFutureBuilder = 非同期初期化が必要な画面」の定型パターン
       body: FutureBuilder<void>(
         // 🔧 重要：ViewModelからFutureを取得
+        //
+        // future
+        // FutureBuilderで使うオプション。監視する非同期処理を指定
+        // - ViewModelのinitializeFutureの状態変化のたびにbuilderが実行され、状態に応じたUIを描画(=builderが動く)
+        // - initializeFutureはcamera使う際の決まりでパッケージの初期化をしてる
+        //   (サービス、ビューモデルと根深いのでわかりづらいが結局これがサービスでされてるの理解でOK)
         future: _viewModel.initializeFuture,
         builder: (context, snapshot) {
+          // 監視している非同期処理が完了したかどうかを判定
           if (snapshot.connectionState == ConnectionState.done) {
             // カメラ初期化完了：メインUIを表示
-            // 🔧 重要：元のコードと全く同じStack構造
+            // Stack:「Widgetを重ね合わせるためのレイアウトWidget」
             return Stack(
               children: [
                 // =======================================
                 // 🎥 背景：カメラプレビュー
                 // =======================================
-                // 🔧 重要：ViewModelからcontrollerを取得
-                if (_viewModel.controller != null)
-                  CameraPreview(_viewModel.controller!),
+                // ViewModelからcontrollerを取得
+                if (_viewModel.controller != null) CameraPreview(_viewModel.controller!),
 
-                // =======================================
-                // 📊 デバッグ情報：現在の黒板のサイズ表示
-                // =======================================
-                Positioned(
-                  top: 50,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      '📏 ${_viewModel.blackboardSize.width.toInt()}×${_viewModel.blackboardSize.height.toInt()}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                ),
+                // デバッグ情報：現在の黒板のサイズ表示のWidget読みこみ
+                BlackboardSizeDisplay(blackboardSize: _viewModel.blackboardSize),
 
-                // =======================================
+                // TODO：明日は内容、動作確認
                 // 🎯 メイン：黒板 + リサイズハンドル
-                // =======================================
-                // 🔧 重要：元のコードと全く同じPositioned構造
-                Positioned(
-                  // 📍 位置制御：ViewModelの状態を参照
-                  left: _viewModel.isInitialPosition ? 0 : _viewModel.blackboardPosition.dx,
-                  top: _viewModel.isInitialPosition ? null : _viewModel.blackboardPosition.dy,
-                  bottom: _viewModel.isInitialPosition ? 0 : null, // 初期位置では下端固定
-                  child: Stack(
-                    children: [
-                      // ===============================
-                      // 📱 黒板本体
-                      // ===============================
-                      // 🔧 重要：元のコードと全く同じGestureDetector
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque, // タッチ検出を確実にする
-
-                        // 🔧 重要：onPanStart で context を渡す
-                        // このcontextが元のコードと同じ参照先になる
-                        onPanStart: (DragStartDetails details) {
-                          _viewModel.onPanStart(details, context);
-                        },
-
-                        onPanUpdate: (DragUpdateDetails details) {
-                          _viewModel.onPanUpdate(details);
-                        },
-
-                        onPanEnd: (DragEndDetails details) {
-                          _viewModel.onPanEnd(details);
-                        },
-
-                        child: Container(
-                          // 🔧 重要：ViewModelからGlobalKeyを取得
-                          key: _viewModel.blackboardKey,
-                          width: _viewModel.blackboardSize.width,
-                          height: _viewModel.blackboardSize.height,
-                          decoration: BoxDecoration(
-                            // 操作中の視覚的フィードバック
-                            border: _viewModel.isResizing || _viewModel.isDragging
-                                ? Border.all(color: Colors.blue, width: 2)
-                                : null,
-                          ),
-                          child: const BlackboardWidget(), // 実際の黒板コンテンツ
-                        ),
-                      ),
-
-                      // ===============================
-                      // 🔧 四隅のリサイズハンドル
-                      // ===============================
-                      _buildCornerHandle('topLeft'),     // 左上
-                      _buildCornerHandle('topRight'),    // 右上
-                      _buildCornerHandle('bottomLeft'),  // 左下
-                      _buildCornerHandle('bottomRight'), // 右下
-                    ],
-                  ),
+                BlackboardInteractiveWidget(
+                  viewModel: _viewModel,
+                  parentContext: context,
                 ),
               ],
             );

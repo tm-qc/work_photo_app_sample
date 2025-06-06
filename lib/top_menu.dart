@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 // 分離後のページ（ドラッグ初動バグ）
 import 'package:work_photo_app_sample/ui/camera/widgets/take_picture_screen.dart';
-// 分離前のファイル（ドラッグ初動なし）
-// import 'package:work_photo_app_sample/ui/camera/widgets/_bak_take_picture_screen.dart';
 import 'config/camera_config.dart';
 import 'ui/blackboard_setting/widgets/blackboard_setting_screen.dart';
 
