@@ -57,6 +57,10 @@ class FileLogOutput extends LogOutput {
     // Android StudioのDevice Explorerで確認できる
     // /data/data/com.work_photo_app_sample.work_photo_app_sample/app_flutter
     //
+    // VsCode StudioのDevice Explorerで確認する方法はコードで見るしかない
+    // Android StudioのDevice ExplorerみたいにGUIで見る方法はないので、
+    // GUI使いたいならVS CODEではなくAndroid Studioを併用する
+    // 
     // TODO；最終的にはFirebaseのサーバーに格納予定
 
     // logsフォルダがなければ作成
