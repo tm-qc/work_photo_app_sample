@@ -37,6 +37,8 @@ class BlackboardInteractiveWidget extends StatelessWidget {
       top: viewModel.isInitialPosition ? null : viewModel.blackboardPosition.dy,
       bottom: viewModel.isInitialPosition ? 0 : null, // 初期位置では下端固定
       child: Stack(
+        // 四隅のハンドルが黒板の外に出るため、はみ出しを許可
+        clipBehavior: Clip.none, 
         children: [
           // ===============================
           // 📱 黒板本体
@@ -101,14 +103,27 @@ class BlackboardInteractiveWidget extends StatelessWidget {
   ///
   // Widgetは「画面に表示される全ての部品の基底クラス」「何らかのUI部品を返すメソッド」という意味になるので、UIを形成するメソッドの場合に戻り値の型としてWidgetをつける
   Widget _buildCornerHandle(String corner) {
+
+    // double型なら小数点も使える滑らかな位置指定が可能
+    // 
+    // finalよりconstを使う理由は？
+    // constはコンパイル時に値が決定する定数で、パフォーマンスが向上します
+    // 値も固定値なので constを使います
+    const double cornerPosition = -10; // 角の位置を示す変数（初期値）
+    // ハンドルのサイズを定義
+    // TODO:ハンドルサイズが28以下になるとドラッグ移動が先に反応して、操作感が落ちてしまう印象が強くなる
+    // TODO:28でも操作感はもっと良くしたいと感じるが・・どうしようか検討中
+    const double handleSize = 28.0; // ハンドルのサイズ
+
     return Positioned(
       // 角の位置に応じてtop/bottom、left/rightを設定
-      top: corner.contains('top') ? -8 : null,     // 上側の角なら上端から-8px
-      bottom: corner.contains('bottom') ? -8 : null, // 下側の角なら下端から-8px
-      left: corner.contains('Left') ? -8 : null,   // 左側の角なら左端から-8px
-      right: corner.contains('Right') ? -8 : null, // 右側の角なら右端から-8px
+      top: corner.contains('top') ? cornerPosition : null,     // 上側の角なら上端からcornerPosition
+      bottom: corner.contains('bottom') ? cornerPosition : null, // 下側の角なら下端からcornerPosition
+      left: corner.contains('Left') ? cornerPosition : null,   // 左側の角なら左端からcornerPosition
+      right: corner.contains('Right') ? cornerPosition : null, // 右側の角なら右端からcornerPosition
 
       child: GestureDetector(
+        
         // リサイズ開始
         onPanStart: (DragStartDetails details) {
           viewModel.onCornerDragStart(corner, details);
@@ -125,13 +140,14 @@ class BlackboardInteractiveWidget extends StatelessWidget {
         },
 
         // ハンドルの見た目
+        // 
         child: Container(
-          width: 16,
-          height: 16,
+          width: handleSize,
+          height: handleSize,
           decoration: BoxDecoration(
             color: Colors.blue,                          // 🔵 青い色
             border: Border.all(color: Colors.white, width: 2), // 白い境界線
-            borderRadius: BorderRadius.circular(8),      // 角丸
+            borderRadius: BorderRadius.circular(12),      // 角丸
           ),
         ),
       ),

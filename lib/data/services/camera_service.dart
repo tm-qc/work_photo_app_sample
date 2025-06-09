@@ -54,10 +54,7 @@ class CameraService {
   ///
   /// 【戻り値】
   /// Future<void>: 初期化完了を示すFuture
-  Future<void> initializeCamera(
-      CameraDescription camera,
-      {ResolutionPreset resolutionPreset = ResolutionPreset.medium}
-      ) async {
+  Future<void> initializeCamera(CameraDescription camera) async {
     try {
       // 既存のコントローラーがあれば解放
       await disposeCamera();
@@ -66,7 +63,20 @@ class CameraService {
       // カメラデバイスと解像度を指定してコントローラー生成
       _controller = CameraController(
         camera,
-        resolutionPreset,
+        // 解像度設定
+        // Galaxy SC-42A(2020年のlowスマホ) では medium/high で発熱シャットダウン
+        // 
+        // TODO: 解像度は将来的に設定できめれるようにする？何が一番シンプルなコードでユーザビリティが良いか・・
+        // 
+        // 理想は
+        // 1.自動で機種から判定でデフォルトの画質を決定
+        // 2.機種により最高解像度を制限
+        // 3.ユーザーがその選択肢で選べるようにする
+        // 
+        // 解像度が高いとメモリ消費が増え発熱で落ちるので、この設定が必要
+        // 機種のスペック判定はAndroid OSのAPIレベルで行うのが一般的？
+        // 汎用的、安定的な判定方法は要調査
+        ResolutionPreset.low,
       );
 
       // カメラとの接続・初期化を実行

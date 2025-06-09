@@ -28,8 +28,6 @@ void main() async {
   // カメラの機能を使うためのアプリ起動時の準備
 
   // availableCameras()を使うためにアプリ起動時にインスタンスを作成する
-  WidgetsFlutterBinding.ensureInitialized();
-
   // デバイスで使用可能なカメラのリストを取得します。
   // カメラ起動時にこのリストから正面や背面など何のカメラを起動するか選択する
   final cameras = await availableCameras();

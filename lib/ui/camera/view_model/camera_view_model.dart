@@ -64,15 +64,12 @@ class CameraViewModel extends ChangeNotifier {
   // ==============================================
 
   /// カメラの初期化
-  Future<void> initializeCamera(
-      CameraDescription camera, {
-        ResolutionPreset resolutionPreset = ResolutionPreset.medium,
-      }) async {
+  Future<void> initializeCamera(CameraDescription camera) async {
     try {
       logger.i('カメラ初期化を開始します');
 
       // CameraServiceに初期化を委譲
-      await _cameraService.initializeCamera(camera, resolutionPreset: resolutionPreset);
+      await _cameraService.initializeCamera(camera);
 
       // 初期化成功：Modelにカメラ情報を設定
       _model.controller = _cameraService.controller!;
