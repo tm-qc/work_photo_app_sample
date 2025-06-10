@@ -102,6 +102,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   /// カメラプレビューメインをbuild
   @override
   Widget build(BuildContext context) {
+    // 📱 Screen側でscreenSizeを取得
+    final screenSize = MediaQuery.of(context).size;
+
     return Scaffold(
       appBar: AppBar(title: const Text('カメラプレビュー')),
       // 「body大枠にFutureBuilder = 非同期初期化が必要な画面」の定型パターン
@@ -135,6 +138,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 BlackboardInteractiveWidget(
                   viewModel: _viewModel,
                   parentContext: context,
+                  screenSize: screenSize,
                 ),
               ],
             );

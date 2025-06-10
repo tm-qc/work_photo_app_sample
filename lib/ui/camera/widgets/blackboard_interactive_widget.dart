@@ -20,12 +20,16 @@ class BlackboardInteractiveWidget extends StatelessWidget {
   /// 親画面のContext（座標変換に必要）
   final BuildContext parentContext;
 
+  /// カメラプレビューの画面サイズ
+  final Size screenSize;
+
   /// コンストラクタ
   const BlackboardInteractiveWidget({
     // 呼び出し元のsuper.keyを継承してる
     super.key,
     required this.viewModel,
     required this.parentContext,
+    required this.screenSize,
   });
 
   /// カメラプレビュー上の黒板本体のWidgetをbuild
@@ -131,7 +135,7 @@ class BlackboardInteractiveWidget extends StatelessWidget {
 
         // リサイズ更新
         onPanUpdate: (DragUpdateDetails details) {
-          viewModel.onCornerDragUpdate(details);
+          viewModel.onCornerDragUpdate(details, screenSize);
         },
 
         // リサイズ終了

@@ -213,17 +213,25 @@ class CameraViewModel extends ChangeNotifier {
   /// - 左に移動 → delta.dx = -（マイナス）
   /// - 下に移動 → delta.dy = +（プラス）
   /// - 上に移動 → delta.dy = -（マイナス）
-  void onCornerDragUpdate(DragUpdateDetails details) {
+  void onCornerDragUpdate(DragUpdateDetails details, Size screenSize) {
     if (!_model.isResizing) return;
 
     // 現在のタッチ位置 - 開始時のタッチ位置 = 移動量
     final delta = details.globalPosition - _model.dragStartPosition;
 
+    // 最低サイズ制限を適用
+    // clamp(min, max)でサイズを制限
+    // 縦横比:初期サイズ 150(h)÷200(w) = 0.75 = 3:4:一般的っぽい
+    const double minWidth = 200.0; // 最小幅(初期値と同じ)
+    const double minHeight = 150.0; // 最小高さ(初期値と同じ)
+    final double maxWidth = screenSize.width; // 最大幅(カメラプレビューの幅)
+    const double maxHeight = 300.0; // 最大高さ(初期値の倍)
+
     // 🔧 元のコードと同じswitch文による角別処理
     switch (_model.resizeMode) {
       case 'topLeft':
-        final newWidth = (_model.dragStartSize.width - delta.dx).clamp(100.0, 400.0);
-        final newHeight = (_model.dragStartSize.height - delta.dy).clamp(80.0, 300.0);
+        final newWidth = (_model.dragStartSize.width - delta.dx).clamp(minWidth, maxWidth);
+        final newHeight = (_model.dragStartSize.height - delta.dy).clamp(minHeight, maxHeight);
         _model.blackboardWidth = newWidth;
         _model.blackboardHeight = newHeight;
         _model.blackboardPosition = Offset(
@@ -233,8 +241,8 @@ class CameraViewModel extends ChangeNotifier {
         break;
 
       case 'topRight':
-        final newWidth = (_model.dragStartSize.width + delta.dx).clamp(100.0, 400.0);
-        final newHeight = (_model.dragStartSize.height - delta.dy).clamp(80.0, 300.0);
+        final newWidth = (_model.dragStartSize.width + delta.dx).clamp(minWidth, maxWidth);
+        final newHeight = (_model.dragStartSize.height - delta.dy).clamp(minHeight, maxHeight);
         _model.blackboardWidth = newWidth;
         _model.blackboardHeight = newHeight;
         _model.blackboardPosition = Offset(
@@ -244,8 +252,8 @@ class CameraViewModel extends ChangeNotifier {
         break;
 
       case 'bottomLeft':
-        final newWidth = (_model.dragStartSize.width - delta.dx).clamp(100.0, 400.0);
-        final newHeight = (_model.dragStartSize.height + delta.dy).clamp(80.0, 300.0);
+        final newWidth = (_model.dragStartSize.width - delta.dx).clamp(minWidth, maxWidth);
+        final newHeight = (_model.dragStartSize.height + delta.dy).clamp(minHeight, maxHeight);
         _model.blackboardWidth = newWidth;
         _model.blackboardHeight = newHeight;
         _model.blackboardPosition = Offset(
@@ -255,8 +263,8 @@ class CameraViewModel extends ChangeNotifier {
         break;
 
       case 'bottomRight':
-        _model.blackboardWidth = (_model.dragStartSize.width + delta.dx).clamp(100.0, 400.0);
-        _model.blackboardHeight = (_model.dragStartSize.height + delta.dy).clamp(80.0, 300.0);
+        _model.blackboardWidth = (_model.dragStartSize.width + delta.dx).clamp(minWidth, maxWidth);
+        _model.blackboardHeight = (_model.dragStartSize.height + delta.dy).clamp(minHeight, maxHeight);
         break;
     }
 
