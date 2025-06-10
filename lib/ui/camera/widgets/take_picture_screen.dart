@@ -132,8 +132,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
                 // デバッグ情報：現在の黒板のサイズ表示のWidget読みこみ
                 BlackboardSizeDisplay(blackboardSize: _viewModel.blackboardSize),
-
-                // TODO：明日は内容、動作確認
+                
                 // 🎯 メイン：黒板 + リサイズハンドル
                 BlackboardInteractiveWidget(
                   viewModel: _viewModel,

@@ -72,9 +72,9 @@ void main() {
         await tester.enterText(find.byType(TextFormField).at(0), 'テスト事業');
 
         // TODO:パフォーマンス計測テストは動くが、テキストボックスに入力値がどうしても反映しない。
-        // TODO:Widgetにkeyを設定して以下のコードをためしたり、2秒まったりしたけど変わらず
-        // TODO:Flutterのパフォーマンス計測テストのバグらしいです
-        // TODO:時間ないので今回は一旦無視して、パフォーマンス計測テストは使わない方向で
+        //      Widgetにkeyを設定して以下のコードをためしたり、2秒まったりしたけど変わらず
+        //      Flutterのパフォーマンス計測テストのバグらしいです
+        //      時間ないので今回は一旦無視して、パフォーマンス計測テストは使わない方向で
         //
         // final projectField = find.byKey(Key('project_field'));
         // await tester.tap(projectField); // ← tapで確実にフォーカス

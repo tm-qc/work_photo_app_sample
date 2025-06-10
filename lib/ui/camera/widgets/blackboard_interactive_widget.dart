@@ -116,7 +116,7 @@ class BlackboardInteractiveWidget extends StatelessWidget {
     const double cornerPosition = -10; // 角の位置を示す変数（初期値）
     // ハンドルのサイズを定義
     // TODO:ハンドルサイズが28以下になるとドラッグ移動が先に反応して、操作感が落ちてしまう印象が強くなる
-    // TODO:28でも操作感はもっと良くしたいと感じるが・・どうしようか検討中
+    //      28でも操作感はもっと良くしたいと感じるが・・どうしようか検討中
     const double handleSize = 28.0; // ハンドルのサイズ
 
     return Positioned(
