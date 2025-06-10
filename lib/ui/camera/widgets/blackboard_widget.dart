@@ -4,6 +4,12 @@ import 'blackboard_label.dart';
 import 'blackboard_value.dart';
 
 // カメラプレビュー上の黒板の本体Widget
+// 
+// ドラッグや拡大縮小の機能もあるので、
+// lib\ui\camera\widgets\blackboard_interactive_widget.dart
+// で初期サイズなども設定されて読み込まれてる
+// 黒板本体というか、黒板の入力値表示Widgetに現在なってる
+// TODO: 黒板の入力値表示Widgetに名前を変える？
 
 // 関数で書くか、クラス化するか？
 //
@@ -33,18 +39,11 @@ class BlackboardWidget extends StatelessWidget {
     // MediaQuery.of
     // 今の画面サイズや表示情報（幅、高さ、文字サイズなど）を取得するための仕組み
     // MediaQuery.of(context) から取得できる情報はsize.height	画面の縦の長さなど他にもある
-    //
-    // なぜここに定義？
-    // context は Widget のビルド時に渡されるので、この関数の先頭で取得するのが正解
-    final Size previewSize = MediaQuery.of(context).size;
+    // ※今回ここでは不要メモで残す
+    // final Size previewSize = MediaQuery.of(context).size;
 
     // Container：黒板の大枠で最上の親要素で見た目（枠・色・余白）などを調整するための大箱
     return Container(
-      // 120や300など固定値はだめ？
-      // 固定値だと小さすぎる、大きすぎるがやっぱり発生するので、今のスマホの比率をベースにするのがいいらしい
-      // TODO:ゆくゆく角ドラッグで拡大縮小する予定なのでその時にまた考える
-      height: previewSize.height * 0.2,// 黒板の高さを画面の20％に設定(子から参照するのに必要)
-      width: previewSize.width * 0.5, // 黒板の幅をプレビューの幅＝画面の幅の半分に設定
       // decoration：「見た目（色・線・影・角丸など）」専用。サイズ指定はしない
       // decoration は Container に使うプロパティ（背景、枠線、角丸など）
       decoration: BoxDecoration(
