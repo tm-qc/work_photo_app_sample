@@ -44,7 +44,7 @@ class CameraViewModel extends ChangeNotifier {
   /// 黒板の現在位置を取得
   Offset get blackboardPosition => _model.blackboardPosition;
 
-  /// 黒板の現在サイズを取得
+  /// 黒板の現在サイズを取得(初期サイズ)
   Size get blackboardSize => Size(_model.blackboardWidth, _model.blackboardHeight);
 
   /// 初期位置かどうかを取得
