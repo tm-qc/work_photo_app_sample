@@ -1,5 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
+import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dart';
 import '../../../domain/models/camera_model.dart';
 import '../../../data/services/camera_service.dart';
 import '../../../utils/global_logger.dart';
@@ -20,6 +22,9 @@ class CameraViewModel extends ChangeNotifier {
   /// UIはこのModelの値を参照して描画
   final CameraModel _model;
 
+  /// 黒板設定の読み込みを担当するサービス
+  final BlackboardSettingService _blackboardSettingService;
+
   // ==============================================
   // 🏗️ コンストラクタ・初期化
   // ==============================================
@@ -27,8 +32,10 @@ class CameraViewModel extends ChangeNotifier {
   /// ViewModelのコンストラクタ
   CameraViewModel({
     CameraService? cameraService,
+    BlackboardSettingService? blackboardSettingService,
   })  : _cameraService = cameraService ?? CameraService(),
-        _model = CameraModel();
+        _model = CameraModel(),
+        _blackboardSettingService = blackboardSettingService ?? BlackboardSettingService();
 
   // ==============================================
   // 📊 状態アクセサ（Getter）(get = 読み取り専用)
@@ -59,6 +66,26 @@ class CameraViewModel extends ChangeNotifier {
   /// 黒板のGlobalKeyを取得
   GlobalKey get blackboardKey => _model.blackboardKey;
 
+
+  // ==============================================
+  // 📋 黒板設定値アクセサ（NEW!）
+  // ==============================================
+
+  /// 事業名を取得
+  String get projectName => _model.projectName;
+
+  /// 現場名を取得
+  String get siteName => _model.siteName;
+
+  /// 作業種のキーを取得
+  int get workTypeKey => _model.workTypeKey;
+
+  /// 作業種の表示名を取得
+  String get workTypeName => BlackboardSettingModel.workTypeOptions[_model.workTypeKey] ?? '未設定';
+
+  /// 林小班を取得
+  String get forestUnit => _model.forestUnit;
+
   // ==============================================
   // 📱 カメラ関連の操作メソッド
   // ==============================================
@@ -69,7 +96,10 @@ class CameraViewModel extends ChangeNotifier {
       logger.i('カメラ初期化を開始します');
 
       // CameraServiceに初期化を委譲
-      await _cameraService.initializeCamera(camera);
+      await Future.wait([
+        _cameraService.initializeCamera(camera),  // カメラ初期化
+        _loadBlackboardSettings(),                // 黒板設定読み込み
+      ]);
 
       // 初期化成功：Modelにカメラ情報を設定
       _model.controller = _cameraService.controller!;
@@ -111,6 +141,45 @@ class CameraViewModel extends ChangeNotifier {
       logger.e('写真撮影に失敗しました: $e');
       rethrow;
     }
+  }
+
+    // ==============================================
+  // 📋 黒板設定値読み込みメソッド（NEW!）
+  // ==============================================
+
+  /// 黒板設定値を読み込む
+  Future<void> _loadBlackboardSettings() async {
+    try {
+      logger.i('黒板設定値の読み込みを開始します');
+
+      // BlackboardSettingServiceから設定値を取得
+      final settingsData = await _blackboardSettingService.load();
+
+      // Modelに設定値を反映
+      _model.projectName = settingsData[BlackboardSettingModel.projectKey] ?? '';
+      _model.siteName = settingsData[BlackboardSettingModel.siteKey] ?? '';
+      // TODO:設定値がない場合は常にデフォルト=作業前になると思うが、未設定と表示したい場合の仕様を考えないといけない。作業前でもいいのかもしれない
+      _model.workTypeKey = settingsData[BlackboardSettingModel.workTypeKey] ?? BlackboardSettingModel.defaultWorkTypeKey;
+      _model.forestUnit = settingsData[BlackboardSettingModel.forestKey] ?? '';
+
+      logger.i('黒板設定値の読み込みが完了しました');
+      logger.d('読み込んだ値: 事業名=${_model.projectName}, 現場名=${_model.siteName}, 作業種=${_model.workTypeKey}, 林小班=${_model.forestUnit}');
+
+    } catch (e) {
+      logger.e('黒板設定値の読み込みに失敗しました: $e');
+      
+      // エラー時はデフォルト値を設定
+      _model.projectName = '';
+      _model.siteName = '';
+      _model.workTypeKey = BlackboardSettingModel.defaultWorkTypeKey;
+      _model.forestUnit = '';
+    }
+  }
+
+  /// 黒板設定値を手動で再読み込み（必要に応じて使用）
+  Future<void> reloadBlackboardSettings() async {
+    await _loadBlackboardSettings();
+    notifyListeners(); // UI更新を通知
   }
 
   // ==============================================
