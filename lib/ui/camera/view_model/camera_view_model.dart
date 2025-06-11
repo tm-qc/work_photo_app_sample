@@ -68,7 +68,7 @@ class CameraViewModel extends ChangeNotifier {
 
 
   // ==============================================
-  // 📋 黒板設定値アクセサ（NEW!）
+  // 📋 黒板設定値アクセサ
   // ==============================================
 
   /// 事業名を取得
@@ -81,6 +81,7 @@ class CameraViewModel extends ChangeNotifier {
   int get workTypeKey => _model.workTypeKey;
 
   /// 作業種の表示名を取得
+  // 保存された数字の設定値をBlackboardSettingModel.workTypeOptionsで文字に変換して取得してる
   String get workTypeName => BlackboardSettingModel.workTypeOptions[_model.workTypeKey] ?? '未設定';
 
   /// 林小班を取得

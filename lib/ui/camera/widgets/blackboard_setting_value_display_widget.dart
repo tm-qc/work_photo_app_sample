@@ -29,7 +29,42 @@ import 'blackboard_value.dart';
 // 　やった結果そんなに手間増えないし、呼び出すときにcontextを引数に渡さなくてよかった
 
 class BlackboardSettingValueDisplayWidget extends StatelessWidget {
-  const BlackboardSettingValueDisplayWidget({super.key});
+  // ==============================================
+  // 📋 黒板の設定値を受け取るプロパティ
+  // ==============================================
+  
+  /// 事業名
+  final String projectName;
+  
+  /// 現場名 
+  final String siteName;
+  
+  /// 作業種の表示名（"作業前"、"作業中"、"作業後"など）
+  final String workTypeName;
+  
+  /// 林小班
+  final String forestUnit;
+
+  // ==============================================
+  // 🏗️ コンストラクタ
+  // ==============================================
+
+  /// BlackboardWidgetのコンストラクタ
+  /// 
+  /// 【使用例】
+  /// BlackboardWidget(
+  ///   projectName: viewModel.projectName,
+  ///   siteName: viewModel.siteName,  
+  ///   workTypeName: viewModel.workTypeName,
+  ///   forestUnit: viewModel.forestUnit,
+  /// )
+  const BlackboardSettingValueDisplayWidget({
+    super.key,
+    required this.projectName,
+    required this.siteName,
+    required this.workTypeName,
+    required this.forestUnit,
+  });
 
   // BuildContext は画面上の位置・状態を持つcontextを使うのに必要
   @override
@@ -75,7 +110,10 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
               // widthは初期値60だが引数で設定も可能
               const BlackboardLabel(text: '事業名'),
               // 事業名の値
-              const BlackboardValue(showRightBorder:false),
+              BlackboardValue(
+                text: projectName.isNotEmpty ? projectName : "未設定", 
+                showRightBorder:false
+              ),
             ],
           ),
 
@@ -85,11 +123,15 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
               // 現場名ラベル
               const BlackboardLabel(text: '現場名'),
               // 値
-              const BlackboardValue(),
+              BlackboardValue(
+                text: siteName.isNotEmpty ? siteName : "未設定"
+              ),
               // 林小班ラベル
               const BlackboardLabel(text: '林小班'),
               // 値
-              const BlackboardValue(text:"あいう", showRightBorder:false),
+              BlackboardValue(
+                text: forestUnit.isNotEmpty ? forestUnit : "未設定", 
+                showRightBorder:false),
             ],
           ),
 
@@ -98,8 +140,8 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
           // Expanded 自体が「空間を均等に割る役割」
           Expanded(
             child: Align(
-              child: const Text(
-                '作業種の設定値',
+              child: Text(
+                workTypeName.isNotEmpty ? workTypeName : "未設定",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,

@@ -86,7 +86,13 @@ class BlackboardWidget extends StatelessWidget {
               ),
 
               // 黒板の設定値を表示するWidget
-              child: const BlackboardSettingValueDisplayWidget(),
+              // - ViewModel経由で保存された設定値を取得して表示
+              child: BlackboardSettingValueDisplayWidget(
+                projectName: viewModel.projectName,   // 事業名
+                siteName: viewModel.siteName,         // 現場名
+                workTypeName: viewModel.workTypeName, // 作業種
+                forestUnit: viewModel.forestUnit,     // 林小班
+              ),
             ),
           ),
 
