@@ -2,7 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import '../view_model/camera_view_model.dart';
 import '../../../utils/global_logger.dart';
-import 'blackboard_interactive_widget.dart';
+import 'blackboard_widget.dart';
 import 'blackboard_size_display.dart';
 import 'display_picture_screen.dart';
 
@@ -134,7 +134,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 BlackboardSizeDisplay(blackboardSize: _viewModel.blackboardSize),
                 
                 // 🎯 メイン：黒板 + リサイズハンドル
-                BlackboardInteractiveWidget(
+                BlackboardWidget(
                   viewModel: _viewModel,
                   parentContext: context,
                   screenSize: screenSize,
