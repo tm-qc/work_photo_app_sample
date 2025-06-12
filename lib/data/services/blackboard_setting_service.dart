@@ -110,7 +110,17 @@ class BlackboardSettingService {
     return {
       BlackboardSettingModel.projectKey: prefs.getString(BlackboardSettingModel.projectKey) ?? '',
       BlackboardSettingModel.siteKey: prefs.getString(BlackboardSettingModel.siteKey) ?? '',
-      BlackboardSettingModel.workTypeKey: prefs.getInt(BlackboardSettingModel.workTypeKey) ?? BlackboardSettingModel.defaultWorkTypeKey,
+      // TODO:todo_01 
+      //      作業種に関してはBlackboardSettingModel.defaultWorkTypeKeyを値がないときに使ってるので値なし=未設定にならない
+      //      デフォルトの0か空にして未設定とするか検討中
+      // 
+      //      現状ここを''にしてもカメラプレビューの黒板に表示される値は未設定にならず、0の作業前になってしまう
+      //      なぜならないか？
+      // 　　　lib\domain\models\blackboard_setting_model.dartのBlackboardSettingModel.workTypeKeyでデフォルト値が0に設定されているから
+      // 
+      //      そもそも値がないときの設定、導線は黒板設定とカメラプレビューの黒板でそれぞれ確認整理して一か所にした方が良いかも
+      //      でもここはintなので''ではなく0にしないと成立しないかも
+      BlackboardSettingModel.workTypeKey: prefs.getInt(BlackboardSettingModel.workTypeKey) ?? '',
       BlackboardSettingModel.forestKey: prefs.getString(BlackboardSettingModel.forestKey) ?? '',
     };
   }

@@ -7,7 +7,7 @@ class BlackboardValue extends StatelessWidget {
 
   const BlackboardValue({
     super.key,
-    this.text = "未設定",
+    this.text = "",
     // 必要な場合に横幅の比率を調整できる
     this.flex = 1,
     // 右側の線が二重になる部分があるので制御用

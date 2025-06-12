@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_photo_app_sample/config/app_config.dart';
 
 import 'blackboard_label.dart';
 import 'blackboard_value.dart';
@@ -111,7 +112,7 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
               const BlackboardLabel(text: '事業名'),
               // 事業名の値
               BlackboardValue(
-                text: projectName.isNotEmpty ? projectName : "未設定", 
+                text: projectName.isNotEmpty ? projectName : AppConfig.notSetText, 
                 showRightBorder:false
               ),
             ],
@@ -124,13 +125,13 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
               const BlackboardLabel(text: '現場名'),
               // 値
               BlackboardValue(
-                text: siteName.isNotEmpty ? siteName : "未設定"
+                text: siteName.isNotEmpty ? siteName : AppConfig.notSetText
               ),
               // 林小班ラベル
               const BlackboardLabel(text: '林小班'),
               // 値
               BlackboardValue(
-                text: forestUnit.isNotEmpty ? forestUnit : "未設定", 
+                text: forestUnit.isNotEmpty ? forestUnit : AppConfig.notSetText, 
                 showRightBorder:false),
             ],
           ),
@@ -141,7 +142,7 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
           Expanded(
             child: Align(
               child: Text(
-                workTypeName.isNotEmpty ? workTypeName : "未設定",
+                workTypeName.isNotEmpty ? workTypeName : AppConfig.notSetText,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,

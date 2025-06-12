@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:work_photo_app_sample/config/app_config.dart';
 import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
 import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dart';
 import '../../../domain/models/camera_model.dart';
@@ -82,7 +83,7 @@ class CameraViewModel extends ChangeNotifier {
 
   /// 作業種の表示名を取得
   // 保存された数字の設定値をBlackboardSettingModel.workTypeOptionsで文字に変換して取得してる
-  String get workTypeName => BlackboardSettingModel.workTypeOptions[_model.workTypeKey] ?? '未設定';
+  String get workTypeName => BlackboardSettingModel.workTypeOptions[_model.workTypeKey] ?? AppConfig.notSetText;
 
   /// 林小班を取得
   String get forestUnit => _model.forestUnit;
@@ -154,13 +155,14 @@ class CameraViewModel extends ChangeNotifier {
       logger.i('黒板設定値の読み込みを開始します');
 
       // BlackboardSettingServiceから設定値を取得
+      // TODO:todo_01 そもそも黒板設定のサービスをカメラプレビューの黒板の値の取得に使うべきか？
       final settingsData = await _blackboardSettingService.load();
 
       // Modelに設定値を反映
       _model.projectName = settingsData[BlackboardSettingModel.projectKey] ?? '';
       _model.siteName = settingsData[BlackboardSettingModel.siteKey] ?? '';
-      // TODO:設定値がない場合は常にデフォルト=作業前になると思うが、未設定と表示したい場合の仕様を考えないといけない。作業前でもいいのかもしれない
-      _model.workTypeKey = settingsData[BlackboardSettingModel.workTypeKey] ?? BlackboardSettingModel.defaultWorkTypeKey;
+      // TODO:todo_01
+      _model.workTypeKey = settingsData[BlackboardSettingModel.workTypeKey] ?? '';
       _model.forestUnit = settingsData[BlackboardSettingModel.forestKey] ?? '';
 
       logger.i('黒板設定値の読み込みが完了しました');
