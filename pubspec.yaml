@@ -49,7 +49,11 @@ dependencies:
   # https://pub.dev/packages/path_provider/versions
   path_provider: ^2.1.5
 
-
+  # 画像合成用
+  # 2025/03/23 リリースの最新版
+  # https://pub.dev/packages/image/versions
+  # flutter pub get
+  image: ^4.5.4
 
 
   # 「flutter_form_builder + form_builder_validators」でForm実装するデメリット
