@@ -119,8 +119,8 @@ class BlackboardSettingService {
       // 　　　lib\domain\models\blackboard_setting_model.dartのBlackboardSettingModel.workTypeKeyでデフォルト値が0に設定されているから
       // 
       //      そもそも値がないときの設定、導線は黒板設定とカメラプレビューの黒板でそれぞれ確認整理して一か所にした方が良いかも
-      //      でもここはintなので''ではなく0にしないと成立しないかも
-      BlackboardSettingModel.workTypeKey: prefs.getInt(BlackboardSettingModel.workTypeKey) ?? '',
+      //      でもここはintなので''ではなく0にしないと成立しない。int型の値をString型に代入しようとしているエラーになる
+      BlackboardSettingModel.workTypeKey: prefs.getInt(BlackboardSettingModel.workTypeKey) ?? BlackboardSettingModel.defaultWorkTypeKey,
       BlackboardSettingModel.forestKey: prefs.getString(BlackboardSettingModel.forestKey) ?? '',
     };
   }

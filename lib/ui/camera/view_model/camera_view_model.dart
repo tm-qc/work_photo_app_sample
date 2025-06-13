@@ -1,5 +1,9 @@
+import 'dart:typed_data';// Uint8List（バイト配列）を使うため
+import 'dart:ui' as ui;// ui.Image（画像データ）を使うため
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';// RenderRepaintBoundary を使うため
 import 'package:work_photo_app_sample/config/app_config.dart';
 import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
 import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dart';
@@ -87,6 +91,91 @@ class CameraViewModel extends ChangeNotifier {
 
   /// 林小班を取得
   String get forestUnit => _model.forestUnit;
+
+  // ==============================================
+  // 📷 撮影画像取得変換系のメソッド
+  // ==============================================
+
+  /// 黒板Widgetを取得し画像データに変換
+  // 
+  // 【何をしているか】
+  // 1. 画面に表示されている黒板Widget（あなたが見ている黒板）
+  // 2. それをスクリーンショットして画像データに変換
+  // 3. 後で撮影画像と合成するために使用
+  
+  Future<Uint8List?> captureBlackboardAsImage() async {
+    try {
+      logger.i('黒板のスクリーンショットを開始');
+
+      // 1. 画面に表示中の黒板Widgetを特定
+      final RenderRepaintBoundary? boundary = 
+          _model.blackboardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      
+      if (boundary == null) {
+        logger.e('黒板Widgetが見つかりません');
+        return null;
+      }
+
+      // 2. 黒板Widget → 画像データに変換（スクリーンショット）
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0); // 高解像度
+      
+      // 3. 画像データ → PNG形式のバイト配列に変換
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      // 4. 他のメソッドで使いやすい形式で返す
+      final Uint8List? result = byteData?.buffer.asUint8List();
+      
+      logger.i('黒板スクリーンショット完了: ${result?.length ?? 0} bytes');
+      return result;
+
+    } catch (e) {
+      logger.e('黒板スクリーンショットに失敗: $e');
+      return null;
+    }
+  }
+
+  /// 黒板つき写真を撮影し合成・保存メソッドを参照して実行
+  // 
+  // 【処理の流れ】
+  // 1. 通常のカメラ撮影
+  // 2. 黒板をスクリーンショット
+  // 3. 2つの画像を合成
+  // 4. 端末に保存
+  Future<String?> takePictureWithBlackboard(Size previewSize) async {
+    try {
+      logger.i('黒板つき撮影を開始');
+
+      // 1. 通常のカメラ撮影（黒板は映ってない）
+      final XFile cameraImage = await _cameraService.takePicture();
+      logger.d('カメラ撮影完了: ${cameraImage.path}');
+      
+      // 2. 黒板をスクリーンショット
+      final Uint8List? blackboardData = await captureBlackboardAsImage();
+      if (blackboardData == null) {
+        logger.e('黒板データの取得に失敗');
+        return null;
+      }
+
+      // 3. カメラサービスで画像合成・保存
+      final String? savedPath = await _cameraService.compositeAndSave(
+        cameraImagePath: cameraImage.path,      // 撮影画像
+        blackboardImageData: blackboardData,    // 黒板画像
+        blackboardPosition: _model.blackboardPosition, // 黒板の位置
+        blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight), // 黒板のサイズ
+        previewSize: previewSize,               // プレビュー画面サイズ
+      );
+
+      if (savedPath != null) {
+        logger.i('黒板つき画像保存完了: $savedPath');
+      }
+      
+      return savedPath;
+
+    } catch (e) {
+      logger.e('黒板つき撮影に失敗: $e');
+      return null;
+    }
+  }
 
   // ==============================================
   // 📱 カメラ関連の操作メソッド

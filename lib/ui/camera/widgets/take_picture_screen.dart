@@ -159,20 +159,45 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            // 撮影処理をViewModelに委譲
-            final XFile image = await _viewModel.takePicture();
+            logger.i('撮影ボタンが押されました');
 
-            // 画面遷移のみScreenが担当
-            if (context.mounted) {
+            // 画面サイズを取得（座標変換に必要）
+            final Size screenSize = MediaQuery.of(context).size;
+            
+            // 黒板つき写真を撮影・合成・保存
+            final String? savedPath = await _viewModel.takePictureWithBlackboard(screenSize);
+            
+            if (savedPath != null && context.mounted) {
+              // 成功：黒板つき合成画像を表示
+              logger.i('撮影成功、プレビュー画面に遷移');
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => DisplayPictureScreen(imagePath: image.path),
+                  builder: (context) => DisplayPictureScreen(imagePath: savedPath),
+                ),
+              );
+            } else {
+              // 失敗：エラーメッセージ表示
+              logger.e('撮影または保存に失敗');
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('写真の撮影・保存に失敗しました'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          } catch (e) {
+            logger.e('撮影処理でエラー: $e');
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('撮影中にエラーが発生しました'),
+                  backgroundColor: Colors.red,
                 ),
               );
             }
-          } catch (e) {
-            logger.e('写真撮影に失敗しました: $e');
           }
         },
         child: const Icon(Icons.camera_alt), // カメラアイコン

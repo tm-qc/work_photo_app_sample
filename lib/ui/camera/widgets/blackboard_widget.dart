@@ -68,30 +68,33 @@ class BlackboardWidget extends StatelessWidget {
             onPanEnd: (DragEndDetails details) {
               viewModel.onPanEnd(details);
             },
-
-            child: Container(
+            // RepaintBoundaryは、Widgetの描画をキャプチャするための境界を定義します＝黒板をキャプチャー
+            // TODO:撮影画像と黒板をキャプチャーする機能はあるがこれは黒板をキャプチャーだっけ？
+            // GlobalKeyは RepaintBoundary に付ける必要があるので、Containerから出しました
+            child: RepaintBoundary(
               // 重要：ViewModelからGlobalKeyを取得
               // key:これがないとドラッグの初動で黒板が下にずれる
               key: viewModel.blackboardKey,
+              child: Container(
+                // width,heightがないと四隅ドラッグの拡大縮小のサイズが黒板に反映しない
+                width: viewModel.blackboardSize.width,
+                height: viewModel.blackboardSize.height,
 
-              // width,heightがないと四隅ドラッグの拡大縮小のサイズが黒板に反映しない
-              width: viewModel.blackboardSize.width,
-              height: viewModel.blackboardSize.height,
+                decoration: BoxDecoration(
+                  // 操作中の視覚的フィードバック
+                  border: viewModel.isResizing || viewModel.isDragging
+                      ? Border.all(color: Colors.blue, width: 4)
+                      : null,
+                ),
 
-              decoration: BoxDecoration(
-                // 操作中の視覚的フィードバック
-                border: viewModel.isResizing || viewModel.isDragging
-                    ? Border.all(color: Colors.blue, width: 4)
-                    : null,
-              ),
-
-              // 黒板の設定値を表示するWidget
-              // - ViewModel経由で保存された設定値を取得して表示
-              child: BlackboardSettingValueDisplayWidget(
-                projectName: viewModel.projectName,   // 事業名
-                siteName: viewModel.siteName,         // 現場名
-                workTypeName: viewModel.workTypeName, // 作業種
-                forestUnit: viewModel.forestUnit,     // 林小班
+                // 黒板の設定値を表示するWidget
+                // - ViewModel経由で保存された設定値を取得して表示
+                child: BlackboardSettingValueDisplayWidget(
+                  projectName: viewModel.projectName,   // 事業名
+                  siteName: viewModel.siteName,         // 現場名
+                  workTypeName: viewModel.workTypeName, // 作業種
+                  forestUnit: viewModel.forestUnit,     // 林小班
+                ),
               ),
             ),
           ),

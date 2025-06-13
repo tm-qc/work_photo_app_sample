@@ -1,4 +1,10 @@
+import 'dart:io';// File（ファイル操作）を使うため
+import 'dart:typed_data';// Uint8List（バイト配列）を使うため
+import 'package:flutter/material.dart';// Offset、Size を使うため
 import 'package:camera/camera.dart';
+import 'package:image/image.dart' as img;// 画像合成ライブラリ
+import 'package:path/path.dart' as path;// ファイルパス操作用
+import 'package:path_provider/path_provider.dart';// アプリフォルダ取得用
 import '../../utils/global_logger.dart';
 
 /// カメラの初期化・制御・撮影を担当するサービスクラス
@@ -156,6 +162,112 @@ class CameraService {
       logger.e('写真撮影に失敗しました: $e');
       rethrow;
     }
+  }
+
+  // ==============================================
+  // 📸 撮影合成保存
+  // ==============================================
+
+  /// 撮影画像と黒板画像を合成
+  // 
+  // 【何をしているか】
+  // 1. 撮影画像（背景）を読み込み
+  // 2. 黒板画像（前景）を読み込み  
+  // 3. 座標を調整して重ね合わせ
+  // 4. 合成画像を生成
+  Future<String?> compositeAndSave({
+    required String cameraImagePath,        // 撮影画像のパス
+    required Uint8List blackboardImageData, // 黒板画像データ
+    required Offset blackboardPosition,     // 黒板の位置
+    required Size blackboardSize,           // 黒板のサイズ
+    required Size previewSize,              // プレビュー画面サイズ
+  }) async {
+    try {
+      logger.i('画像合成を開始');
+
+      // 1. 撮影画像を読み込み
+      final File cameraImageFile = File(cameraImagePath);
+      final Uint8List cameraImageBytes = await cameraImageFile.readAsBytes();
+      final img.Image? cameraImage = img.decodeImage(cameraImageBytes);
+      
+      if (cameraImage == null) {
+        logger.e('撮影画像の読み込みに失敗');
+        return null;
+      }
+      logger.d('撮影画像サイズ: ${cameraImage.width}x${cameraImage.height}');
+
+      // 2. 黒板画像を読み込み
+      final img.Image? blackboardImage = img.decodePng(blackboardImageData);
+      if (blackboardImage == null) {
+        logger.e('黒板画像の読み込みに失敗');
+        return null;
+      }
+      logger.d('黒板画像サイズ: ${blackboardImage.width}x${blackboardImage.height}');
+
+      // 3. 座標系変換（プレビュー座標 → 実際の撮影画像座標）
+      // プレビューサイズと実際の撮影画像サイズは異なるため調整が必要
+      final double scaleX = cameraImage.width / previewSize.width;
+      final double scaleY = cameraImage.height / previewSize.height;
+      
+      final int realX = (blackboardPosition.dx * scaleX).round();
+      final int realY = (blackboardPosition.dy * scaleY).round();
+      final int realWidth = (blackboardSize.width * scaleX).round();
+      final int realHeight = (blackboardSize.height * scaleY).round();
+
+      logger.d('座標変換: プレビュー($blackboardPosition) → 実画像($realX, $realY)');
+
+      // 4. 黒板画像のサイズを実際の撮影画像に合わせて調整
+      final img.Image resizedBlackboard = img.copyResize(
+        blackboardImage,
+        width: realWidth,
+        height: realHeight,
+      );
+
+      // 5. 画像合成（撮影画像の上に黒板画像を重ねる）
+      final img.Image compositeImage = img.compositeImage(
+        cameraImage,        // 背景（撮影画像）
+        resizedBlackboard,  // 前景（黒板画像）
+        dstX: realX,        // 黒板を配置するX座標
+        dstY: realY,        // 黒板を配置するY座標
+      );
+
+      // 6. 合成画像を端末に保存
+      final String savedPath = await _saveCompositeImage(compositeImage);
+      
+      logger.i('画像合成完了: $savedPath');
+      return savedPath;
+
+    } catch (e) {
+      logger.e('画像合成中にエラー: $e');
+      return null;
+    }
+  }
+
+  /// 合成済み画像を端末に保存
+  // 
+  // 【何をしているか】
+  // TODO:なにしてる？今プレビュー後にまだうごいていないっぽいので確認
+  Future<String> _saveCompositeImage(img.Image compositeImage) async {
+    // アプリ専用フォルダを取得
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final Directory photosDir = Directory('${appDir.path}/photos');
+    
+    // フォルダが存在しない場合は作成
+    if (!await photosDir.exists()) {
+      await photosDir.create(recursive: true);
+    }
+
+    // ユニークなファイル名を生成
+    final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final String fileName = 'photo_with_blackboard_$timestamp.jpg';
+    final String filePath = path.join(photosDir.path, fileName);
+
+    // JPEG形式で保存（画質95%）
+    final File outputFile = File(filePath);
+    await outputFile.writeAsBytes(img.encodeJpg(compositeImage, quality: 95));
+
+    logger.d('画像保存完了: $filePath');
+    return filePath;
   }
 
   // ==============================================
