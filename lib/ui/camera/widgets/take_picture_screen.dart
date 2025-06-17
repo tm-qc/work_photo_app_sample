@@ -168,14 +168,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             final String? savedPath = await _viewModel.takePictureWithBlackboard(screenSize);
             
             if (savedPath != null && context.mounted) {
-              // 成功：黒板つき合成画像を表示
-              logger.i('撮影成功、プレビュー画面に遷移');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DisplayPictureScreen(imagePath: savedPath),
-                ),
-              );
+              // // 成功：黒板つき合成画像を表示
+              // logger.i('撮影成功、プレビュー画面に遷移');
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //     builder: (context) => DisplayPictureScreen(imagePath: savedPath),
+              //   ),
+              // );
             } else {
               // 失敗：エラーメッセージ表示
               logger.e('撮影または保存に失敗');

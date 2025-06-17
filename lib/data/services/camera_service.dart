@@ -153,6 +153,7 @@ class CameraService {
 
       // 写真撮影を実行
       // XFile: 撮影された画像の一時ファイル情報
+      // takePicture(): CameraパッケージのCameraControllerのメソッド。カメラから写真を撮影する
       final XFile image = await _controller!.takePicture();
 
       logger.i('写真撮影が完了しました: ${image.path}');
@@ -186,8 +187,11 @@ class CameraService {
       logger.i('画像合成を開始');
 
       // 1. 撮影画像を読み込み
+      // 撮影画像のパスからファイルを読み込み、参照し操作するためにFileオブジェクトを作成
       final File cameraImageFile = File(cameraImagePath);
+      // 黒板合成が目的なので、バイト読込→デコードで読み込む処理が必須なのでバイトで読込
       final Uint8List cameraImageBytes = await cameraImageFile.readAsBytes();
+      // 画像を参照し操作するためにバイトの画像データをデコードしてimg.Imageオブジェクトに変換
       final img.Image? cameraImage = img.decodeImage(cameraImageBytes);
       
       if (cameraImage == null) {
@@ -206,6 +210,9 @@ class CameraService {
 
       // 3. 座標系変換（プレビュー座標 → 実際の撮影画像座標）
       // プレビューサイズと実際の撮影画像サイズは異なるため調整が必要
+      // TODO: プレビュー画面で全体が小さく表示されてるからから、黒板がつぶれて歪んでる。ここが問題か？
+      // 　　　そもそもプレビュー画面は何が正常なのかわからないが、カメラプレビューと同じ状態で表示しないとおかしいよね？
+      // 　　　ちなみに、アイフォンはプレビューなくそのまま保存して確認だが、プレビューってなくてもいい？
       final double scaleX = cameraImage.width / previewSize.width;
       final double scaleY = cameraImage.height / previewSize.height;
       
