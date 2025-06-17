@@ -42,10 +42,16 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
-    <!-- パッケージのpermission_handlerでAndroid権限設定「ストレージへのアクセスを許可しますか？」ダイアログ表示 -->
-    <!-- Android 10+(以降)用 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- ギャラリー保存に必要な権限設定 -->
+    <!-- permission_handlerパッケージで「ストレージへのアクセスを許可しますか？」ダイアログ表示 -->
+    
+    <!-- Android 10以降用: ギャラリー保存、画像アクセス権限 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <!-- Android 13+(以降)用-->
+    
+    <!-- 新しいAndroid13以降用: 画像アクセス権限 -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    
+    <!-- カメラ撮影権限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>

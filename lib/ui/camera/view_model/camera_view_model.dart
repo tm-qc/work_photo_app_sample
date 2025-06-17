@@ -157,12 +157,12 @@ class CameraViewModel extends ChangeNotifier {
       }
 
       // 3. カメラサービスで画像合成・保存
-      final String? savedPath = await _cameraService.compositeAndSave(
-        cameraImagePath: cameraImage.path,      // 撮影画像
-        blackboardImageData: blackboardData,    // 黒板画像
-        blackboardPosition: _model.blackboardPosition, // 黒板の位置
-        blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight), // 黒板のサイズ
-        previewSize: previewSize,               // プレビュー画面サイズ
+      final String? savedPath = await _cameraService.compositeAndSaveToGallery(
+        cameraImagePath: cameraImage.path,
+        blackboardImageData: blackboardData,
+        blackboardPosition: _model.blackboardPosition,
+        blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight),
+        previewSize: previewSize,
       );
 
       if (savedPath != null) {
@@ -172,7 +172,7 @@ class CameraViewModel extends ChangeNotifier {
       return savedPath;
 
     } catch (e) {
-      logger.e('黒板つき撮影に失敗: $e');
+      logger.e('撮影・保存エラー: $e');
       return null;
     }
   }

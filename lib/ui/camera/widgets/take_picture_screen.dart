@@ -4,7 +4,8 @@ import '../view_model/camera_view_model.dart';
 import '../../../utils/global_logger.dart';
 import 'blackboard_widget.dart';
 import 'blackboard_size_display.dart';
-import 'display_picture_screen.dart';
+// 撮影画像プレビュー画面は削除予定
+// import 'display_picture_screen.dart';
 
 /// カメラプレビューと黒板の表示・操作を行うメイン画面 StatefulWidget
 class TakePictureScreen extends StatefulWidget {
@@ -168,6 +169,16 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             final String? savedPath = await _viewModel.takePictureWithBlackboard(screenSize);
             
             if (savedPath != null && context.mounted) {
+              // ✅ 成功：ギャラリー保存完了をスナックバーで通知
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('写真をギャラリーに保存しました'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              logger.i('ギャラリー保存成功: $savedPath');
+
+              // TODO: 撮影画像プレビュー画面は削除予定
               // // 成功：黒板つき合成画像を表示
               // logger.i('撮影成功、プレビュー画面に遷移');
               // Navigator.push(

@@ -2,9 +2,11 @@ import 'dart:io';// File（ファイル操作）を使うため
 import 'dart:typed_data';// Uint8List（バイト配列）を使うため
 import 'package:flutter/material.dart';// Offset、Size を使うため
 import 'package:camera/camera.dart';
+import 'package:gal/gal.dart';// ギャラリー保存用
 import 'package:image/image.dart' as img;// 画像合成ライブラリ
 import 'package:path/path.dart' as path;// ファイルパス操作用
 import 'package:path_provider/path_provider.dart';// アプリフォルダ取得用
+import 'package:permission_handler/permission_handler.dart';// スマホ権限管理用
 import '../../utils/global_logger.dart';
 
 /// カメラの初期化・制御・撮影を担当するサービスクラス
@@ -169,50 +171,77 @@ class CameraService {
   // 📸 撮影合成保存
   // ==============================================
 
-  /// 撮影画像と黒板画像を合成
-  // 
-  // 【何をしているか】
-  // 1. 撮影画像（背景）を読み込み
-  // 2. 黒板画像（前景）を読み込み  
-  // 3. 座標を調整して重ね合わせ
-  // 4. 合成画像を生成
-  Future<String?> compositeAndSave({
-    required String cameraImagePath,        // 撮影画像のパス
-    required Uint8List blackboardImageData, // 黒板画像データ
-    required Offset blackboardPosition,     // 黒板の位置
-    required Size blackboardSize,           // 黒板のサイズ
-    required Size previewSize,              // プレビュー画面サイズ
+
+  Future<String?> compositeAndSaveToGallery({
+    required String cameraImagePath,
+    required Uint8List blackboardImageData,
+    required Offset blackboardPosition,
+    required Size blackboardSize,
+    required Size previewSize,
   }) async {
     try {
-      logger.i('画像合成を開始');
+      logger.i('ギャラリー保存を開始');
 
-      // 1. 撮影画像を読み込み
-      // 撮影画像のパスからファイルを読み込み、参照し操作するためにFileオブジェクトを作成
+      // 1. 権限チェック（Galaxy A21対応）
+      var status = await Permission.storage.status;
+      if (!status.isGranted) {
+        status = await Permission.storage.request();
+        if (!status.isGranted) {
+          logger.e('ストレージ権限が拒否されました');
+          return null;
+        }
+      }
+
+      // 2. 既存のロジックで画像合成
+      final img.Image? compositeImage = await _compositeImages(
+        cameraImagePath: cameraImagePath,
+        blackboardImageData: blackboardImageData,
+        blackboardPosition: blackboardPosition,
+        blackboardSize: blackboardSize,
+        previewSize: previewSize,
+      );
+
+      if (compositeImage == null) {
+        logger.e('画像合成に失敗');
+        return null;
+      }
+
+      // 3. 一時ファイルに保存
+      final String tempPath = await _saveTempImage(compositeImage);
+
+      // 4. ギャラリーに保存（galパッケージ）
+      await Gal.putImage(tempPath);
+      
+      logger.i('ギャラリー保存完了: $tempPath');
+      return tempPath;
+
+    } catch (e) {
+      logger.e('ギャラリー保存エラー: $e');
+      return null;
+    }
+  }
+
+  // 🔧 NEW: 既存ロジックを使った画像合成（プライベートメソッド）
+  Future<img.Image?> _compositeImages({
+    required String cameraImagePath,
+    required Uint8List blackboardImageData,
+    required Offset blackboardPosition,
+    required Size blackboardSize,
+    required Size previewSize,
+  }) async {
+    try {
+      // 撮影画像を読み込み
       final File cameraImageFile = File(cameraImagePath);
-      // 黒板合成が目的なので、バイト読込→デコードで読み込む処理が必須なのでバイトで読込
       final Uint8List cameraImageBytes = await cameraImageFile.readAsBytes();
-      // 画像を参照し操作するためにバイトの画像データをデコードしてimg.Imageオブジェクトに変換
       final img.Image? cameraImage = img.decodeImage(cameraImageBytes);
       
-      if (cameraImage == null) {
-        logger.e('撮影画像の読み込みに失敗');
-        return null;
-      }
-      logger.d('撮影画像サイズ: ${cameraImage.width}x${cameraImage.height}');
+      if (cameraImage == null) return null;
 
-      // 2. 黒板画像を読み込み
+      // 黒板画像を読み込み
       final img.Image? blackboardImage = img.decodePng(blackboardImageData);
-      if (blackboardImage == null) {
-        logger.e('黒板画像の読み込みに失敗');
-        return null;
-      }
-      logger.d('黒板画像サイズ: ${blackboardImage.width}x${blackboardImage.height}');
+      if (blackboardImage == null) return null;
 
-      // 3. 座標系変換（プレビュー座標 → 実際の撮影画像座標）
-      // プレビューサイズと実際の撮影画像サイズは異なるため調整が必要
-      // TODO: プレビュー画面で全体が小さく表示されてるからから、黒板がつぶれて歪んでる。ここが問題か？
-      // 　　　そもそもプレビュー画面は何が正常なのかわからないが、カメラプレビューと同じ状態で表示しないとおかしいよね？
-      // 　　　ちなみに、アイフォンはプレビューなくそのまま保存して確認だが、プレビューってなくてもいい？
+      // 座標変換（既存ロジック）
       final double scaleX = cameraImage.width / previewSize.width;
       final double scaleY = cameraImage.height / previewSize.height;
       
@@ -221,59 +250,36 @@ class CameraService {
       final int realWidth = (blackboardSize.width * scaleX).round();
       final int realHeight = (blackboardSize.height * scaleY).round();
 
-      logger.d('座標変換: プレビュー($blackboardPosition) → 実画像($realX, $realY)');
-
-      // 4. 黒板画像のサイズを実際の撮影画像に合わせて調整
+      // 黒板リサイズ
       final img.Image resizedBlackboard = img.copyResize(
         blackboardImage,
         width: realWidth,
         height: realHeight,
       );
 
-      // 5. 画像合成（撮影画像の上に黒板画像を重ねる）
-      final img.Image compositeImage = img.compositeImage(
-        cameraImage,        // 背景（撮影画像）
-        resizedBlackboard,  // 前景（黒板画像）
-        dstX: realX,        // 黒板を配置するX座標
-        dstY: realY,        // 黒板を配置するY座標
+      // 画像合成
+      return img.compositeImage(
+        cameraImage,
+        resizedBlackboard,
+        dstX: realX,
+        dstY: realY,
       );
 
-      // 6. 合成画像を端末に保存
-      final String savedPath = await _saveCompositeImage(compositeImage);
-      
-      logger.i('画像合成完了: $savedPath');
-      return savedPath;
-
     } catch (e) {
-      logger.e('画像合成中にエラー: $e');
+      logger.e('画像合成エラー: $e');
       return null;
     }
   }
 
-  /// 合成済み画像を端末に保存
-  // 
-  // 【何をしているか】
-  // TODO:なにしてる？今プレビュー後にまだうごいていないっぽいので確認
-  Future<String> _saveCompositeImage(img.Image compositeImage) async {
-    // アプリ専用フォルダを取得
-    final Directory appDir = await getApplicationDocumentsDirectory();
-    final Directory photosDir = Directory('${appDir.path}/photos');
-    
-    // フォルダが存在しない場合は作成
-    if (!await photosDir.exists()) {
-      await photosDir.create(recursive: true);
-    }
-
-    // ユニークなファイル名を生成
+  Future<String> _saveTempImage(img.Image compositeImage) async {
+    final Directory tempDir = await getTemporaryDirectory();
     final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-    final String fileName = 'photo_with_blackboard_$timestamp.jpg';
-    final String filePath = path.join(photosDir.path, fileName);
+    final String fileName = 'photo_$timestamp.jpg';
+    final String filePath = path.join(tempDir.path, fileName);
 
-    // JPEG形式で保存（画質95%）
     final File outputFile = File(filePath);
-    await outputFile.writeAsBytes(img.encodeJpg(compositeImage, quality: 95));
+    await outputFile.writeAsBytes(img.encodeJpg(compositeImage, quality: 90));
 
-    logger.d('画像保存完了: $filePath');
     return filePath;
   }
 
