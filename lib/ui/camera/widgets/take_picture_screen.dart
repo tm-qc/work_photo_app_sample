@@ -103,12 +103,47 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   /// カメラプレビューメインをbuild
   @override
   Widget build(BuildContext context) {
-    // 📱 Screen側でscreenSizeを取得
+    // 📱 Screen側でscreenSize(9:16のスマホ全体のsize)を取得
+    // 
+    // 取得されるscreenSizeの値の例(Pixcel9)
+    // Size {
+    //  width: 411.4,      // 幅
+    //  height: 923.4,     // 高さ
+    //  dx: 411.4,         // widthと同じ
+    //  dy: 923.4,         // heightと同じ
+    //  aspectRatio: 0.445, // アスペクト比＝幅÷高さ
+    //  flipped: Size(923.4, 411.4), // 縦横入れ替え
+    //  hashCode: 67905832, // オブジェクトのハッシュ
+    //  isEmpty: false,     // サイズが0かどうか
+    //  isFinite: true,     // 有限値かどうか
+    //  isInfinite: false,  // 無限値かどうか
+    //  longestSide: 923.4, // 長い方の辺
+    //  shortestSide: 411.4, // 短い方の辺
+    // }
+    // 
+    // screenSize.widthみたいに参照できる
+    // 
+    // aspectRatioの利用方法
+    // 1.0   = 正方形（幅と高さが同じ）
+    // 1.0 > = 横長（幅の方が大きい）
+    // 1.0 < = 縦長（高さの方が大きい）
+    // 
+    // 0.445 = 9:16のスマホのアスペクト比=今回は縦長のスマホ画面
     final screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
+      // 高さはデフォでマテリアルデザインのAppBarの高さになっている
       appBar: AppBar(title: const Text('カメラプレビュー')),
       // 「body大枠にFutureBuilder = 非同期初期化が必要な画面」の定型パターン
+      // カメラプレビューの大きさについて
+      // 
+      // 以下のアスペクト比で決まってる
+      // 
+      // 画面 9:16：スマホは縦長で大体の機種でこうなってる
+      // カメラプレビュー 4:3：Cameraパッケージのカメラプレビューの比率
+      // 
+      // カメラプレビューの大きさは9:16の機種の大きさの中で4:3の比率で表示されている
+      // Flutter inspectorで確認したらFutureBuilderがカメラプレビューの大きさで間違いない
       body: FutureBuilder<void>(
         // 🔧 重要：ViewModelからFutureを取得
         //
@@ -129,6 +164,14 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 // 🎥 背景：カメラプレビュー
                 // =======================================
                 // ViewModelからcontrollerを取得
+                // Cameraのコントローラーで初期で親Widget（Stack）のサイズいっぱいに表示になってる
+                // 
+                // Stackの大きさとは？
+                // 以下の流れで決まる
+                // 
+                // 1.スマホは縦長で大体の機種で9:16になっておりScaffold()はこれに従う
+                // 2.Containerでwidth,heightを指定した場合、Scaffold()の大きさを指定できる
+                // 3.今回はContainer無指定なので画面一杯9:16の大きさの中で初期Cameraアスペクト比の4:3になっている
                 if (_viewModel.controller != null) CameraPreview(_viewModel.controller!),
 
                 // デバッグ情報：現在の黒板のサイズ表示のWidget読みこみ
