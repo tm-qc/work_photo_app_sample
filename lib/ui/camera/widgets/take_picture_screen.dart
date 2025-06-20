@@ -121,7 +121,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     //  shortestSide: 411.4, // 短い方の辺
     // }
     // 
-    // screenSize.widthみたいに参照できる
+    // takePictureScreenSize.widthみたいに参照できる
     // 
     // aspectRatioの利用方法
     // 1.0   = 正方形（幅と高さが同じ）
@@ -129,7 +129,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     // 1.0 < = 縦長（高さの方が大きい）
     // 
     // 0.445 = 9:16のスマホのアスペクト比=今回は縦長のスマホ画面
-    final screenSize = MediaQuery.of(context).size;
+    final takePictureScreenSize = MediaQuery.of(context).size;
 
     return Scaffold(
       // 高さはデフォでマテリアルデザインのAppBarの高さになっている
@@ -173,6 +173,12 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 // 2.Containerでwidth,heightを指定した場合、Scaffold()の大きさを指定できる
                 // 3.今回はContainer無指定なので画面一杯9:16の大きさの中で初期Cameraアスペクト比の4:3になっている
                 if (_viewModel.controller != null) CameraPreview(_viewModel.controller!),
+                
+                /*if (_viewModel.controller != null)       
+                    AspectRatio(
+                      aspectRatio: 4/3,
+                      child: CameraPreview(_viewModel.controller!),
+                    ),*/
 
                 // デバッグ情報：現在の黒板のサイズ表示のWidget読みこみ
                 BlackboardSizeDisplay(blackboardSize: _viewModel.blackboardSize),
@@ -181,7 +187,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 BlackboardWidget(
                   viewModel: _viewModel,
                   parentContext: context,
-                  screenSize: screenSize,
+                  takePictureScreenSize: takePictureScreenSize,
                 ),
               ],
             );
@@ -205,11 +211,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           try {
             logger.i('撮影ボタンが押されました');
 
-            // 画面サイズを取得（座標変換に必要）
-            final Size screenSize = MediaQuery.of(context).size;
+            // 写真撮影画面サイズ全体を取得
+            final Size takePictureScreenSize = MediaQuery.of(context).size;
             
             // 黒板つき写真を撮影・合成・保存
-            final String? savedPath = await _viewModel.takePictureWithBlackboard(screenSize);
+            final String? savedPath = await _viewModel.takePictureWithBlackboard(takePictureScreenSize);
             
             if (savedPath != null && context.mounted) {
               // ✅ 成功：ギャラリー保存完了をスナックバーで通知

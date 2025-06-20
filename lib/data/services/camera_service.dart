@@ -71,8 +71,8 @@ class CameraService {
       // カメラデバイスと解像度を指定してコントローラー生成
       _controller = CameraController(
         camera,
-        // 解像度設定
-        // Galaxy SC-42A(2020年のlowスマホ) では medium/high で発熱シャットダウン
+        // 解像度+比率設定
+        // Galaxy SC-42A(2020年のAndroidTM 10（AndroidTM 11対応）) では medium/high で発熱シャットダウン
         // 
         // TODO: 解像度は将来的に設定できめれるようにする？何が一番シンプルなコードでユーザビリティが良いか・・
         // 
@@ -84,6 +84,31 @@ class CameraService {
         // 解像度が高いとメモリ消費が増え発熱で落ちるので、この設定が必要
         // 機種のスペック判定はAndroid OSのAPIレベルで行うのが一般的？
         // 汎用的、安定的な判定方法は要調査
+        // 
+        // CameraパッケージのResolutionPreset 一覧
+        // https://pub.dev/documentation/flutter_better_camera/latest/camera/ResolutionPreset.html
+        // 
+        // プリセット      iOS          Android      比率(iOS)   比率(Android)
+        // ----------------------------------------------------------------
+        // low           352x288      320x240      11:9        4:3
+        // medium        640x480      720x480      4:3         3:2  
+        // high          1280x720     1280x720     16:9        16:9
+        // veryHigh      1920x1080    1920x1080    16:9        16:9
+        // ultraHigh     3840x2160    3840x2160    16:9        16:9
+        // max           最高解像度    最高解像度    機種依存     機種依存
+        // 
+        // カメラプレビューの比率
+        // 360 : 480 = 3 : 4 (縦長)
+        // 
+        // 現在の設定
+        // ResolutionPreset.low: 320x240 (4:3) ← 横長
+        // プレビュー: 360(w)x480(h) (3:4) ← 縦長
+        // → 比率が逆のため黒板が歪む
+        // 
+        // TODO:パフォーマンス
+        // 参考にしてる電子小黒板のアプリではAndroid OS 5.0以上がサポートでカメラプレビューが1280*960(4:3)でサクサク動いて、画像保存も問題ありません
+        // FLutterでは、なぜlowで320x240じゃないとGalaxy SC-42A(2020年のAndroidTM 10（AndroidTM 11対応）)ですら、熱で動かなくなるかわからない不明。
+        // また画像保存も黒板が歪む
         ResolutionPreset.low,
       );
 
@@ -135,6 +160,7 @@ class CameraService {
   // ==============================================
 
   /// 写真を撮影
+  /// 純粋な撮影画像を取得するメソッド
   ///
   /// 【呼び出し元】
   /// ViewModel.takePicture() から呼ばれる
@@ -172,17 +198,30 @@ class CameraService {
   // ==============================================
 
 
+  /// 撮影画像と黒板を合成してギャラリーに保存
+  /// 
+  /// 【引数】
+  /// cameraImagePath: 撮影した写真のファイルパス
+  /// blackboardImageData: 黒板のスクリーンショット画像（PNG形式）
+  /// blackboardPosition: 黒板を配置する座標（カメラプレビュー上での位置）
+  /// blackboardSize: 黒板のサイズ（カメラプレビュー上でのサイズ）  
+  /// takePictureScreenSize: 写真撮影画面全体のサイズ（座標変換の基準）
+  /// 
+  /// 【戻り値】
+  /// String?: 保存成功時はファイルパス、失敗時はnull
   Future<String?> compositeAndSaveToGallery({
     required String cameraImagePath,
     required Uint8List blackboardImageData,
     required Offset blackboardPosition,
     required Size blackboardSize,
-    required Size previewSize,
+    required Size takePictureScreenSize,
   }) async {
     try {
       logger.i('ギャラリー保存を開始');
 
-      // 1. 権限チェック（Galaxy A21対応）
+      // 1. 権限チェック
+      // Android 13以降はWRITE_EXTERNAL_STORAGE権限が不要になったが、古い機種の互換性のために残す
+      // TODO:仮想エミュレータで権限拒否で保存できないのはなぜ？
       var status = await Permission.storage.status;
       if (!status.isGranted) {
         status = await Permission.storage.request();
@@ -198,7 +237,7 @@ class CameraService {
         blackboardImageData: blackboardImageData,
         blackboardPosition: blackboardPosition,
         blackboardSize: blackboardSize,
-        previewSize: previewSize,
+        takePictureScreenSize: takePictureScreenSize,
       );
 
       if (compositeImage == null) {
@@ -221,13 +260,23 @@ class CameraService {
     }
   }
 
-  // 🔧 NEW: 既存ロジックを使った画像合成（プライベートメソッド）
+  ///  画像合成処理の本体
+  /// 
+  /// 【引数】
+  /// cameraImagePath: 撮影した写真のファイルパス
+  /// blackboardImageData: 黒板のPNG画像データ（Uint8List）
+  /// blackboardPosition: 黒板の配置座標（カメラプレビュー上での位置）
+  /// blackboardSize: 黒板のサイズ（カメラプレビュー上でのサイズ）
+  /// takePictureScreenSize: 写真撮影画面全体のサイズ（座標変換の基準）
+  /// 
+  /// 【戻り値】
+  /// img.Image?: 合成済み画像、失敗時はnull
   Future<img.Image?> _compositeImages({
     required String cameraImagePath,
     required Uint8List blackboardImageData,
     required Offset blackboardPosition,
     required Size blackboardSize,
-    required Size previewSize,
+    required Size takePictureScreenSize,
   }) async {
     try {
       // 撮影画像を読み込み
@@ -242,8 +291,8 @@ class CameraService {
       if (blackboardImage == null) return null;
 
       // 座標変換（既存ロジック）
-      final double scaleX = cameraImage.width / previewSize.width;
-      final double scaleY = cameraImage.height / previewSize.height;
+      final double scaleX = cameraImage.width / takePictureScreenSize.width;
+      final double scaleY = cameraImage.height / takePictureScreenSize.height;
       
       final int realX = (blackboardPosition.dx * scaleX).round();
       final int realY = (blackboardPosition.dy * scaleY).round();
@@ -257,7 +306,7 @@ class CameraService {
         height: realHeight,
       );
 
-      // 画像合成
+      // 画像合成(img.ImageのcompositeImageメソッドを使用)
       return img.compositeImage(
         cameraImage,
         resizedBlackboard,

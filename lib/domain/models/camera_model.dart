@@ -55,11 +55,11 @@ class CameraModel {
 
   /// 黒板の幅（ピクセル単位）(黒板初期サイズ)
   /// リサイズ操作で変更される
-  double blackboardWidth = 200.0;
+  double blackboardWidth = 200;
 
   /// 黒板の高さ（ピクセル単位）(黒板初期サイズ)
   /// リサイズ操作で変更される
-  double blackboardHeight = 150.0;
+  double blackboardHeight = 150;
 
   /// 移動中フラグ
   /// 黒板をドラッグで移動している最中はtrue

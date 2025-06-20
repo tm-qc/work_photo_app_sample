@@ -74,7 +74,7 @@ class BlackboardSettingValueDisplayWidget extends StatelessWidget {
     // 今の画面サイズや表示情報（幅、高さ、文字サイズなど）を取得するための仕組み
     // MediaQuery.of(context) から取得できる情報はsize.height	画面の縦の長さなど他にもある
     // ※今回ここでは不要メモで残す
-    // final Size previewSize = MediaQuery.of(context).size;
+    // final Size takePictureScreenSize = MediaQuery.of(context).size;
 
     // Container：黒板の大枠で最上の親要素で見た目（枠・色・余白）などを調整するための大箱
     return Container(

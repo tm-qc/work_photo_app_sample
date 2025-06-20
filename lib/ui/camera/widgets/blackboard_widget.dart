@@ -25,7 +25,7 @@ class BlackboardWidget extends StatelessWidget {
   final BuildContext parentContext;
 
   /// カメラプレビューの画面サイズ
-  final Size screenSize;
+  final Size takePictureScreenSize;
 
   /// コンストラクタ
   const BlackboardWidget({
@@ -33,7 +33,7 @@ class BlackboardWidget extends StatelessWidget {
     super.key,
     required this.viewModel,
     required this.parentContext,
-    required this.screenSize,
+    required this.takePictureScreenSize,
   });
 
   /// カメラプレビュー上の黒板本体のWidgetをbuild
@@ -68,7 +68,10 @@ class BlackboardWidget extends StatelessWidget {
             onPanEnd: (DragEndDetails details) {
               viewModel.onPanEnd(details);
             },
-            // RepaintBoundaryは、Widgetの描画をキャプチャするための境界を定義します＝黒板をキャプチャー
+            // RepaintBoundaryは、親ウィジェットの更新による不要な再描画から分離するウィジェット
+            // Widgetの描画をキャプチャするための境界を定義します＝黒板をキャプチャー
+            // 参考：https://flutter.salon/widget/repaintboundary/
+            // 
             // TODO:撮影画像と黒板をキャプチャーする機能はあるがこれは黒板をキャプチャーだっけ？
             // GlobalKeyは RepaintBoundary に付ける必要があるので、Containerから出しました
             child: RepaintBoundary(
@@ -149,7 +152,7 @@ class BlackboardWidget extends StatelessWidget {
 
         // リサイズ更新
         onPanUpdate: (DragUpdateDetails details) {
-          viewModel.onCornerDragUpdate(details, screenSize);
+          viewModel.onCornerDragUpdate(details, takePictureScreenSize);
         },
 
         // リサイズ終了

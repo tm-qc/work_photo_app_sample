@@ -108,6 +108,12 @@ class CameraViewModel extends ChangeNotifier {
       logger.i('黒板のスクリーンショットを開始');
 
       // 1. 画面に表示中の黒板Widgetを特定
+      // GlobalKey(_model.blackboardKey)を使って、現在のBuildContextから黒板WidgetのRenderObjectを取得
+      // 
+      // 1. RepaintBoundary(key: key)           // Widget作成(今回はlib\ui\camera\widgets\blackboard_widget.dartで使われてる)
+      // 2. key.currentContext                  // Context取得(ContextはWidgetの位置や状態を表す)
+      // 3. .findRenderObject()                 // RenderObject取得(今回は黒板Widgetの描画情報)
+      // 4. as RenderRepaintBoundary?           // 型変換
       final RenderRepaintBoundary? boundary = 
           _model.blackboardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       
@@ -117,7 +123,20 @@ class CameraViewModel extends ChangeNotifier {
       }
 
       // 2. 黒板Widget → 画像データに変換（スクリーンショット）
-      final ui.Image image = await boundary.toImage(pixelRatio: 3.0); // 高解像度
+      // pixelRatioは画質（解像度）を決める。アスペクト比は変わらない
+      // 
+      // TODO:不確かなので後で確認。画質がきれいで重くなるだけでサイズは変わらない気がする
+      // 
+      // 例）
+      // pixelRatio: 1.0 → 生成画像：200x150ピクセル
+      // pixelRatio: 2.0 → 生成画像：400x300ピクセル
+      // pixelRatio: 3.0 → 生成画像：600x450ピクセル 
+      // 
+      // サイズpx(大きさ):画像の幅と高さに基づいた総ピクセル数
+      // 解像度ppi(綺麗さ):画像の印刷時に1インチあたりに割り当てられる画像ピクセル数で、1インチあたりのピクセル数（ppi）で表されます。
+      //　　　　　したがって、1インチあたりの画像のピクセル数が多いほど、解像度は高くなります。
+      //　　　　　また、高解像度の画像を使用すると、印刷出力の品質が向上します
+      final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
       
       // 3. 画像データ → PNG形式のバイト配列に変換
       final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -141,11 +160,11 @@ class CameraViewModel extends ChangeNotifier {
   // 2. 黒板をスクリーンショット
   // 3. 2つの画像を合成
   // 4. 端末に保存
-  Future<String?> takePictureWithBlackboard(Size previewSize) async {
+  Future<String?> takePictureWithBlackboard(Size takePictureScreenSize) async {
     try {
       logger.i('黒板つき撮影を開始');
 
-      // 1. 通常のカメラ撮影（黒板は映ってない）
+      // 1. 通常のカメラ撮影（黒板は映ってない純粋な撮影画像を取得する）
       final XFile cameraImage = await _cameraService.takePicture();
       logger.d('カメラ撮影完了: ${cameraImage.path}');
       
@@ -156,13 +175,22 @@ class CameraViewModel extends ChangeNotifier {
         return null;
       }
 
-      // 3. カメラサービスで画像合成・保存
+      // 3. カメラサービスで画像合成・保存をする
+      // - cameraImage.path: 撮影したカメラ画像のパス
+      //   "/data/user/0/com.work_photo_app_sample.work_photo_app_sample/cache/CAP3069506080177115524.jpg"
+      // 
+      // - blackboardData: 黒板のスクリーンショットデータ
+      // - _model.blackboardPosition: 黒板の位置（画面上の座標）
+      // - Size(_model.blackboardWidth, _model.blackboardHeight): 黒板のサイズ（幅と高さ）
+      // - takePictureScreenSize: 写真撮影画面全体のサイズ（画面サイズ）
+      //
+      // TODO:合成語黒板が歪む原因は？：上記はきちんととれてる
       final String? savedPath = await _cameraService.compositeAndSaveToGallery(
         cameraImagePath: cameraImage.path,
         blackboardImageData: blackboardData,
         blackboardPosition: _model.blackboardPosition,
         blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight),
-        previewSize: previewSize,
+        takePictureScreenSize: takePictureScreenSize,
       );
 
       if (savedPath != null) {
@@ -217,22 +245,22 @@ class CameraViewModel extends ChangeNotifier {
   }
 
   /// 写真撮影
-  Future<XFile> takePicture() async {
-    try {
-      logger.i('写真撮影を開始します');
+  // Future<XFile> takePicture() async {
+  //   try {
+  //     logger.i('写真撮影を開始します');
 
-      // CameraServiceに撮影処理を委譲
-      // XFile:camera パッケージが提供するファイル型
-      final XFile image = await _cameraService.takePicture();
+  //     // CameraServiceに撮影処理を委譲
+  //     // XFile:camera パッケージが提供するファイル型
+  //     final XFile image = await _cameraService.takePicture();
 
-      logger.i('写真撮影が完了しました: ${image.path}');
-      return image;
+  //     logger.i('写真撮影が完了しました: ${image.path}');
+  //     return image;
 
-    } catch (e) {
-      logger.e('写真撮影に失敗しました: $e');
-      rethrow;
-    }
-  }
+  //   } catch (e) {
+  //     logger.e('写真撮影に失敗しました: $e');
+  //     rethrow;
+  //   }
+  // }
 
     // ==============================================
   // 📋 黒板設定値読み込みメソッド（NEW!）
@@ -374,7 +402,7 @@ class CameraViewModel extends ChangeNotifier {
   /// - 左に移動 → delta.dx = -（マイナス）
   /// - 下に移動 → delta.dy = +（プラス）
   /// - 上に移動 → delta.dy = -（マイナス）
-  void onCornerDragUpdate(DragUpdateDetails details, Size screenSize) {
+  void onCornerDragUpdate(DragUpdateDetails details, Size takePictureScreenSize) {
     if (!_model.isResizing) return;
 
     // 現在のタッチ位置 - 開始時のタッチ位置 = 移動量
@@ -385,7 +413,7 @@ class CameraViewModel extends ChangeNotifier {
     // 縦横比:初期サイズ 150(h)÷200(w) = 0.75 = 3:4:一般的っぽい
     const double minWidth = 200.0; // 最小幅(初期値と同じ)
     const double minHeight = 150.0; // 最小高さ(初期値と同じ)
-    final double maxWidth = screenSize.width; // 最大幅(カメラプレビューの幅)
+    final double maxWidth = takePictureScreenSize.width; // 最大幅(写真撮影画面全体の幅)
     const double maxHeight = 300.0; // 最大高さ(初期値の倍)
 
     // 🔧 元のコードと同じswitch文による角別処理
