@@ -120,8 +120,6 @@ class CameraService {
       // 初期化完了まで待機
       await _initializeControllerFuture!;
 
-      logger.i('カメラの初期化が完了しました');
-
     } catch (e) {
       // 初期化エラーをログ出力
       logger.e('カメラの初期化に失敗しました: $e');
@@ -148,7 +146,6 @@ class CameraService {
         await _controller!.dispose();
         _controller = null;
         _initializeControllerFuture = null;
-        logger.i('カメラリソースを解放しました');
       }
     } catch (e) {
       logger.e('カメラリソースの解放に失敗しました: $e');
@@ -184,7 +181,6 @@ class CameraService {
       // takePicture(): CameraパッケージのCameraControllerのメソッド。カメラから写真を撮影する
       final XFile image = await _controller!.takePicture();
 
-      logger.i('写真撮影が完了しました: ${image.path}');
       return image;
 
     } catch (e) {
@@ -217,8 +213,6 @@ class CameraService {
     required Size takePictureScreenSize,
   }) async {
     try {
-      logger.i('ギャラリー保存を開始');
-
       // 1. 権限チェック
       // Android 13以降はWRITE_EXTERNAL_STORAGE権限が不要になったが、古い機種の互換性のために残す
       // TODO:仮想エミュレータで権限拒否で保存できないのはなぜ？
@@ -250,8 +244,6 @@ class CameraService {
 
       // 4. ギャラリーに保存（galパッケージ）
       await Gal.putImage(tempPath);
-      
-      logger.i('ギャラリー保存完了: $tempPath');
       return tempPath;
 
     } catch (e) {

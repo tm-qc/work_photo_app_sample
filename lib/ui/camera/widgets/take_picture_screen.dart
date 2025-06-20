@@ -209,8 +209,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            logger.i('撮影ボタンが押されました');
-
             // 写真撮影画面サイズ全体を取得
             final Size takePictureScreenSize = MediaQuery.of(context).size;
             
@@ -225,7 +223,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                   backgroundColor: Colors.green,
                 ),
               );
-              logger.i('ギャラリー保存成功: $savedPath');
 
               // TODO: 撮影画像プレビュー画面は削除予定
               // // 成功：黒板つき合成画像を表示

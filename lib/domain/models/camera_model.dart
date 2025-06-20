@@ -47,6 +47,7 @@ class CameraModel {
 
   /// 黒板のサイズを取得するためのGlobalKey
   /// ウィジェットの位置やサイズを取得する際に使用
+  /// TODO:これって黒板のkeyとれてる？写真撮影画面全体のkeyでは？
   final GlobalKey blackboardKey = GlobalKey();
 
   // ==============================================

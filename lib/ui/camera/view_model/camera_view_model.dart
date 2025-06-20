@@ -105,8 +105,6 @@ class CameraViewModel extends ChangeNotifier {
   
   Future<Uint8List?> captureBlackboardAsImage() async {
     try {
-      logger.i('黒板のスクリーンショットを開始');
-
       // 1. 画面に表示中の黒板Widgetを特定
       // GlobalKey(_model.blackboardKey)を使って、現在のBuildContextから黒板WidgetのRenderObjectを取得
       // 
@@ -143,8 +141,6 @@ class CameraViewModel extends ChangeNotifier {
       
       // 4. 他のメソッドで使いやすい形式で返す
       final Uint8List? result = byteData?.buffer.asUint8List();
-      
-      logger.i('黒板スクリーンショット完了: ${result?.length ?? 0} bytes');
       return result;
 
     } catch (e) {
@@ -162,11 +158,8 @@ class CameraViewModel extends ChangeNotifier {
   // 4. 端末に保存
   Future<String?> takePictureWithBlackboard(Size takePictureScreenSize) async {
     try {
-      logger.i('黒板つき撮影を開始');
-
       // 1. 通常のカメラ撮影（黒板は映ってない純粋な撮影画像を取得する）
       final XFile cameraImage = await _cameraService.takePicture();
-      logger.d('カメラ撮影完了: ${cameraImage.path}');
       
       // 2. 黒板をスクリーンショット
       final Uint8List? blackboardData = await captureBlackboardAsImage();
@@ -193,8 +186,8 @@ class CameraViewModel extends ChangeNotifier {
         takePictureScreenSize: takePictureScreenSize,
       );
 
-      if (savedPath != null) {
-        logger.i('黒板つき画像保存完了: $savedPath');
+      if (savedPath == null) {
+        throw Exception('画像の保存に失敗しました');
       }
       
       return savedPath;
@@ -212,8 +205,6 @@ class CameraViewModel extends ChangeNotifier {
   /// カメラの初期化
   Future<void> initializeCamera(CameraDescription camera) async {
     try {
-      logger.i('カメラ初期化を開始します');
-
       // CameraServiceに初期化を委譲
       await Future.wait([
         _cameraService.initializeCamera(camera),  // カメラ初期化
@@ -227,9 +218,6 @@ class CameraViewModel extends ChangeNotifier {
       // UI更新を通知
       // モデルの状態が変わるタイミングは通知が必要
       notifyListeners();
-
-      logger.i('カメラ初期化が完了しました');
-
     } catch (e) {
       logger.e('カメラ初期化に失敗しました: $e');
 
@@ -244,33 +232,13 @@ class CameraViewModel extends ChangeNotifier {
     }
   }
 
-  /// 写真撮影
-  // Future<XFile> takePicture() async {
-  //   try {
-  //     logger.i('写真撮影を開始します');
-
-  //     // CameraServiceに撮影処理を委譲
-  //     // XFile:camera パッケージが提供するファイル型
-  //     final XFile image = await _cameraService.takePicture();
-
-  //     logger.i('写真撮影が完了しました: ${image.path}');
-  //     return image;
-
-  //   } catch (e) {
-  //     logger.e('写真撮影に失敗しました: $e');
-  //     rethrow;
-  //   }
-  // }
-
-    // ==============================================
+  // ==============================================
   // 📋 黒板設定値読み込みメソッド（NEW!）
   // ==============================================
 
   /// 黒板設定値を読み込む
   Future<void> _loadBlackboardSettings() async {
     try {
-      logger.i('黒板設定値の読み込みを開始します');
-
       // BlackboardSettingServiceから設定値を取得
       // TODO:todo_01 そもそも黒板設定のサービスをカメラプレビューの黒板の値の取得に使うべきか？
       final settingsData = await _blackboardSettingService.load();
@@ -281,8 +249,6 @@ class CameraViewModel extends ChangeNotifier {
       // TODO:todo_01
       _model.workTypeKey = settingsData[BlackboardSettingModel.workTypeKey] ?? '';
       _model.forestUnit = settingsData[BlackboardSettingModel.forestKey] ?? '';
-
-      logger.i('黒板設定値の読み込みが完了しました');
       logger.d('読み込んだ値: 事業名=${_model.projectName}, 現場名=${_model.siteName}, 作業種=${_model.workTypeKey}, 林小班=${_model.forestUnit}');
 
     } catch (e) {
@@ -477,14 +443,10 @@ class CameraViewModel extends ChangeNotifier {
   /// メモリ解放
   // OSの機能を使うときに必要
   void dispose() {
-    logger.i('CameraViewModelのリソースを解放します');
-
     // CameraServiceのコントローラーのメモリ解放
     _cameraService.disposeCamera();
     // 継承した親クラス（ChangeNotifier）のdispose処理も実行
     // 内部にメモリが残るので必要
     super.dispose();
-
-    logger.i('CameraViewModelのリソース解放が完了しました');
   }
 }

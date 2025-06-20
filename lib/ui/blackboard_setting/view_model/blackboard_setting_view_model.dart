@@ -64,7 +64,6 @@ class BlackboardSettingViewModel extends ChangeNotifier {
     // サービス：基本は書かなくてOKだが、具体的に重要な場合だけ書く
     // ViewModel：実行箇所なのでここにtry catheかく
     try {
-      logger.d('デバッグ：ファイル出力のログテスト中');
       // 失敗させる場合の仮コード
       // TODO:ゆくゆくはテストコードの作り方を調べるので、その時に一番いいやり方を確認する
       // throw Exception('テスト用に強制失敗させています');

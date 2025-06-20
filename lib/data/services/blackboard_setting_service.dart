@@ -42,7 +42,6 @@ class BlackboardSettingService {
     required String forest,
   }) async {
       try {
-        logger.d('サービスでもログ動いてる？'); // ログ出力だけでもOK
         // mapにするまえにモデルのコンストラクタで入力値を持ったインスタンス作成
         final model = BlackboardSettingModel(
           project: project,
