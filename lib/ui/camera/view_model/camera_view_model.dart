@@ -134,6 +134,8 @@ class CameraViewModel extends ChangeNotifier {
       // 解像度ppi(綺麗さ):画像の印刷時に1インチあたりに割り当てられる画像ピクセル数で、1インチあたりのピクセル数（ppi）で表されます。
       //　　　　　したがって、1インチあたりの画像のピクセル数が多いほど、解像度は高くなります。
       //　　　　　また、高解像度の画像を使用すると、印刷出力の品質が向上します
+      // 
+      // ※別件補足：DPI（Dots Per Inch）は、主にプリンターやスキャナーなどの解像度を表す単位
       final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
       
       // 3. 画像データ → PNG形式のバイト配列に変換
