@@ -50,6 +50,9 @@ class CameraModel {
   /// TODO:これって黒板のkeyとれてる？写真撮影画面全体のkeyでは？
   final GlobalKey blackboardKey = GlobalKey();
 
+  /// カメラプレビューのサイズを取得するためのGlobalKey
+  final GlobalKey cameraPreviewKey = GlobalKey();
+
   // ==============================================
   // 📏 リサイズ機能用のプロパティ
   // ==============================================

@@ -172,13 +172,17 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 // 1.スマホは縦長で大体の機種で9:16になっておりScaffold()はこれに従う
                 // 2.Containerでwidth,heightを指定した場合、Scaffold()の大きさを指定できる
                 // 3.今回はContainer無指定なので画面一杯9:16の大きさの中で初期Cameraアスペクト比の4:3になっている
-                if (_viewModel.controller != null) CameraPreview(_viewModel.controller!),
-                
-                /*if (_viewModel.controller != null)       
-                    AspectRatio(
-                      aspectRatio: 4/3,
-                      child: CameraPreview(_viewModel.controller!),
-                    ),*/
+                // 
+                // if文はchildrenの中で{}はつけれないので省略してる
+                // なお、{}なしは単一処理のみOK
+                // CameraPreviewのサイズなどを取得するためにLayoutBuilderを使ったが高さが結局全画面なのでダメだった
+                // Containerとkey=GlobalKeyを使って、カメラプレビューのサイズを取得するようにする
+                if (_viewModel.controller != null)
+                  Container(
+                    key: _viewModel.cameraPreviewKey,
+                    child: CameraPreview(_viewModel.controller!),
+                  ),
+                  
 
                 // デバッグ情報：現在の黒板のサイズ表示のWidget読みこみ
                 BlackboardSizeDisplay(blackboardSize: _viewModel.blackboardSize),
@@ -209,11 +213,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            // 写真撮影画面サイズ全体を取得
-            final Size takePictureScreenSize = MediaQuery.of(context).size;
-            
             // 黒板つき写真を撮影・合成・保存
-            final String? savedPath = await _viewModel.takePictureWithBlackboard(takePictureScreenSize);
+            final String? savedPath = await _viewModel.takePictureWithBlackboard();
             
             if (savedPath != null && context.mounted) {
               // ✅ 成功：ギャラリー保存完了をスナックバーで通知

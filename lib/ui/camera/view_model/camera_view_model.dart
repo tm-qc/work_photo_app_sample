@@ -71,6 +71,9 @@ class CameraViewModel extends ChangeNotifier {
   /// 黒板のGlobalKeyを取得
   GlobalKey get blackboardKey => _model.blackboardKey;
 
+  /// カメラプレビューのGlobalKeyを取得
+  GlobalKey get cameraPreviewKey => _model.cameraPreviewKey;
+
 
   // ==============================================
   // 📋 黒板設定値アクセサ
@@ -158,7 +161,7 @@ class CameraViewModel extends ChangeNotifier {
   // 2. 黒板をスクリーンショット
   // 3. 2つの画像を合成
   // 4. 端末に保存
-  Future<String?> takePictureWithBlackboard(Size takePictureScreenSize) async {
+  Future<String?> takePictureWithBlackboard() async {
     try {
       // 1. 通常のカメラ撮影（黒板は映ってない純粋な撮影画像を取得する）
       final XFile cameraImage = await _cameraService.takePicture();
@@ -170,22 +173,27 @@ class CameraViewModel extends ChangeNotifier {
         return null;
       }
 
-      // 3. カメラサービスで画像合成・保存をする
+      // 3.カメラプレビューのRenderBoxを取得する
+      // 　モデルに定義したカメラプレビューのグローバルキーを利用し取得
+      final RenderBox? cameraPreview = 
+          _model.cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
+      // カメラプレビューのサイズオブジェクトを取得
+      final Size cameraPreviewSize = cameraPreview?.size ?? Size.zero;
+
+      // 4. カメラサービスで画像合成・保存をする
       // - cameraImage.path: 撮影したカメラ画像のパス
       //   "/data/user/0/com.work_photo_app_sample.work_photo_app_sample/cache/CAP3069506080177115524.jpg"
       // 
       // - blackboardData: 黒板のスクリーンショットデータ
       // - _model.blackboardPosition: 黒板の位置（画面上の座標）
-      // - Size(_model.blackboardWidth, _model.blackboardHeight): 黒板のサイズ（幅と高さ）
-      // - takePictureScreenSize: 写真撮影画面全体のサイズ（画面サイズ）
-      //
-      // TODO:合成語黒板が歪む原因は？：上記はきちんととれてる
+      // - Size(_model.blackboardWidth, _model.blackboardHeight): 黒板のサイズ（幅と高さ）(拡大縮小あればちゃんとその値になってる)
+      // cameraPreviewSize: カメラプレビューのサイズ（撮影画像のアスペクト比に合わせるため）
       final String? savedPath = await _cameraService.compositeAndSaveToGallery(
         cameraImagePath: cameraImage.path,
         blackboardImageData: blackboardData,
         blackboardPosition: _model.blackboardPosition,
         blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight),
-        takePictureScreenSize: takePictureScreenSize,
+        cameraPreviewSize: cameraPreviewSize,
       );
 
       if (savedPath == null) {

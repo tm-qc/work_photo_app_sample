@@ -98,18 +98,19 @@ class CameraService {
         // max           最高解像度    最高解像度    機種依存     機種依存
         // 
         // カメラプレビューの比率
-        // 360 : 480 = 3 : 4 (縦長)
+        // low:360:480 = 3:4 (縦長)
+        // high:360:640 = 9:16 
         // 
         // 現在の設定
         // ResolutionPreset.low: 320x240 (4:3) ← 横長
         // プレビュー: 360(w)x480(h) (3:4) ← 縦長
-        // → 比率が逆のため黒板が歪む
+        // → 比率が逆のため黒板が歪む→縦横は自動で会うので関係ないっぽい
         // 
         // TODO:パフォーマンス
         // 参考にしてる電子小黒板のアプリではAndroid OS 5.0以上がサポートでカメラプレビューが1280*960(4:3)でサクサク動いて、画像保存も問題ありません
         // FLutterでは、なぜlowで320x240じゃないとGalaxy SC-42A(2020年のAndroidTM 10（AndroidTM 11対応）)ですら、熱で動かなくなるかわからない不明。
-        // また画像保存も黒板が歪む
-        ResolutionPreset.low,
+        // エミュレータだからというのもある？
+        ResolutionPreset.high,
       );
 
       // カメラとの接続・初期化を実行
@@ -201,7 +202,7 @@ class CameraService {
   /// blackboardImageData: 黒板のスクリーンショット画像（PNG形式）
   /// blackboardPosition: 黒板を配置する座標（カメラプレビュー上での位置）
   /// blackboardSize: 黒板のサイズ（カメラプレビュー上でのサイズ）  
-  /// takePictureScreenSize: 写真撮影画面全体のサイズ（座標変換の基準）
+  /// cameraPreviewSize: カメラプレビューのサイズ（座標変換の基準）
   /// 
   /// 【戻り値】
   /// String?: 保存成功時はファイルパス、失敗時はnull
@@ -210,7 +211,7 @@ class CameraService {
     required Uint8List blackboardImageData,
     required Offset blackboardPosition,
     required Size blackboardSize,
-    required Size takePictureScreenSize,
+    required Size cameraPreviewSize,
   }) async {
     try {
       // 1. 権限チェック
@@ -231,7 +232,7 @@ class CameraService {
         blackboardImageData: blackboardImageData,
         blackboardPosition: blackboardPosition,
         blackboardSize: blackboardSize,
-        takePictureScreenSize: takePictureScreenSize,
+        cameraPreviewSize: cameraPreviewSize,
       );
 
       if (compositeImage == null) {
@@ -254,12 +255,19 @@ class CameraService {
 
   ///  画像合成処理の本体
   /// 
+  /// 【なぜ画像の計算、リサイズが必要か？】
+  /// 
+  /// スマホで表示されるカメラプレビューと撮影画像は比率は同じで見た目違和感がないが、サイズが違うため
+  /// 
+  /// - プレビュー: 画面サイズに合わせて表示＝比率を保つので見た目は違和感ない
+  /// - 撮影画像: 設定解像度で保存＝比率を保つので見た目は違和感ない(おそらく実際はカメラプレビューより大きくなってる)
+  /// 
   /// 【引数】
   /// cameraImagePath: 撮影した写真のファイルパス
   /// blackboardImageData: 黒板のPNG画像データ（Uint8List）
   /// blackboardPosition: 黒板の配置座標（カメラプレビュー上での位置）
   /// blackboardSize: 黒板のサイズ（カメラプレビュー上でのサイズ）
-  /// takePictureScreenSize: 写真撮影画面全体のサイズ（座標変換の基準）
+  /// cameraPreviewSize: カメラプレビューのサイズ（座標変換の基準）
   /// 
   /// 【戻り値】
   /// img.Image?: 合成済み画像、失敗時はnull
@@ -268,7 +276,7 @@ class CameraService {
     required Uint8List blackboardImageData,
     required Offset blackboardPosition,
     required Size blackboardSize,
-    required Size takePictureScreenSize,
+    required Size cameraPreviewSize,
   }) async {
     try {
       // 撮影画像を読み込み
@@ -282,28 +290,42 @@ class CameraService {
       final img.Image? blackboardImage = img.decodePng(blackboardImageData);
       if (blackboardImage == null) return null;
 
-      // 座標変換（既存ロジック）
-      final double scaleX = cameraImage.width / takePictureScreenSize.width;
-      final double scaleY = cameraImage.height / takePictureScreenSize.height;
-      
-      final int realX = (blackboardPosition.dx * scaleX).round();
-      final int realY = (blackboardPosition.dy * scaleY).round();
-      final int realWidth = (blackboardSize.width * scaleX).round();
-      final int realHeight = (blackboardSize.height * scaleY).round();
+      /// 座標変換（既存ロジック）
 
-      // 黒板リサイズ
+      // スケール(拡大縮小率)を計算
+      // 
+      // スマホで表示されるカメラプレビューと撮影画像は比率は同じで見た目は違和感がないが、
+      // 実際のサイズが違うので、この計算でスケール(拡大縮小率)を算出し、これを基準に調整しないといけない
+      // ※カメラプレビューより撮影画像の方が大きくなってるので「撮影画像のサイズ / カメラプレビューサイズ」で基準値になるスケール(拡大縮小率)を計算
+      // ※ここは写真撮影画面全体じゃなくてcameraPreviewSizeを基準に計算しないといけない
+      final double scaleX = cameraImage.width / cameraPreviewSize.width;
+      final double scaleY = cameraImage.height / cameraPreviewSize.height;
+      
+      // 黒板の画像を実際の比率に合わせて調整
+      
+      // ポジション
+      // ※スケールで調整しないと位置がずれる
+      // ※黒板の位置を算出
+      final int blackboardRealX = (blackboardPosition.dx * scaleX).round();
+      final int blackboardRealY = (blackboardPosition.dy * scaleY).round();
+      // 黒板画像のサイズを算出
+      // WidthとHeightをそれぞれのスケールで調整
+      final int blackboardRealWidth = (blackboardSize.width * scaleX).round();
+      final int blackboardRealHeight = (blackboardSize.height * scaleY).round();
+
+      // 黒板リサイズを実行
       final img.Image resizedBlackboard = img.copyResize(
         blackboardImage,
-        width: realWidth,
-        height: realHeight,
+        width: blackboardRealWidth,
+        height: blackboardRealHeight,
       );
 
-      // 画像合成(img.ImageのcompositeImageメソッドを使用)
+      // 撮影画像と黒板画像を合成(img.ImageのcompositeImageメソッドを使用)
       return img.compositeImage(
         cameraImage,
         resizedBlackboard,
-        dstX: realX,
-        dstY: realY,
+        dstX: blackboardRealX,
+        dstY: blackboardRealY,
       );
 
     } catch (e) {
