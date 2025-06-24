@@ -97,6 +97,16 @@ class CameraService {
         // ultraHigh     3840x2160    3840x2160    16:9        16:9
         // max           最高解像度    最高解像度    機種依存     機種依存
         // 
+        // アスペクト比の計算
+        // 横画面「横 ÷ 縦（width ÷ height）」
+        // ※縦(縦/横)でも計算できるが、小数比が変わるので注意
+        // 
+        // ↓横縦は入れ替わってるだけで、アスペクト比は同じ
+        // 横4:3(小数比1.3333)
+        // 縦3:4(小数比0.75)
+        // 横16:9(小数比1.7778)
+        // 縦9:16(小数比0.5625)
+        // 
         // カメラプレビューの比率
         // low:360:480 = 3:4 (縦長)
         // high:360:640 = 9:16 
@@ -290,7 +300,7 @@ class CameraService {
       final img.Image? blackboardImage = img.decodePng(blackboardImageData);
       if (blackboardImage == null) return null;
 
-      /// 座標変換（既存ロジック）
+      /// 黒板調整
 
       // スケール(拡大縮小率)を計算
       // 
@@ -300,14 +310,15 @@ class CameraService {
       // ※ここは写真撮影画面全体じゃなくてcameraPreviewSizeを基準に計算しないといけない
       final double scaleX = cameraImage.width / cameraPreviewSize.width;
       final double scaleY = cameraImage.height / cameraPreviewSize.height;
-      
-      // 黒板の画像を実際の比率に合わせて調整
+
+      /// 黒板の画像を実際のカメラプレビュー(撮影画像)の比率に合わせて調整
       
       // ポジション
       // ※スケールで調整しないと位置がずれる
       // ※黒板の位置を算出
       final int blackboardRealX = (blackboardPosition.dx * scaleX).round();
       final int blackboardRealY = (blackboardPosition.dy * scaleY).round();
+      
       // 黒板画像のサイズを算出
       // WidthとHeightをそれぞれのスケールで調整
       final int blackboardRealWidth = (blackboardSize.width * scaleX).round();
@@ -321,13 +332,44 @@ class CameraService {
       );
 
       // 撮影画像と黒板画像を合成(img.ImageのcompositeImageメソッドを使用)
-      return img.compositeImage(
+      final img.Image compositeImage = img.compositeImage(
         cameraImage,
         resizedBlackboard,
         dstX: blackboardRealX,
         dstY: blackboardRealY,
       );
 
+      /// 確認用print
+      //
+      // print('撮影画像サイズ: width:${cameraImage.width} x height:${cameraImage.height}');
+      // print('合成前のアスペクト比: ${cameraImage.width / cameraImage.height}');
+      // print('カメラプレビューサイズ: width:${cameraPreviewSize.width} x height:${cameraPreviewSize.height}');
+      // print('スケールX: $scaleX, スケールY: $scaleY');
+      
+      // print('黒板ポジション調整前: X:${blackboardPosition.dx}, Y:${blackboardPosition.dy}');
+      // print('黒板ポジション調整後(スケールで掛け算した値): X:${blackboardRealX}, Y:${blackboardRealY}');
+      
+      // print('黒板サイズ調整前: width:${blackboardSize.width}, height:${blackboardSize.height}');
+      // print('黒板サイズ調整後(スケールで掛け算した値): width:${blackboardRealWidth}, height:${blackboardRealHeight}');
+      
+      // print('リサイズ後の黒板画像サイズ(黒板サイズ調整後の数値なってるか): width:${resizedBlackboard.width}, height:${resizedBlackboard.height}');
+      
+      // print('合成後の画像サイズ(撮影画像サイズと同じか): width:${compositeImage.width}, height:${compositeImage.height}');
+      // print('合成後のアスペクト比(合成前のアスペクト比と同じか): ${compositeImage.width / compositeImage.height}');
+      // 
+      // ※アスペクト比の計算
+      // 横画面「横 ÷ 縦（width ÷ height）」
+      // ※縦(縦/横)でも計算できるが、小数比が変わるので注意
+      // 
+      // ↓横縦は入れ替わってるだけで、アスペクト比は同じ
+      // 横4:3(小数比1.3333)
+      // 縦3:4(小数比0.75)
+      // 横16:9(小数比1.7778)
+      // 縦9:16(小数比0.5625)
+
+      
+
+      return compositeImage;
     } catch (e) {
       logger.e('画像合成エラー: $e');
       return null;
