@@ -103,10 +103,22 @@ dependencies:
   http: ^1.3.0
   #  なぜcameraパッケージ？
   #  image_picker：一番一般的だが簡易的にしかカメラ機能を使えない。
-  #  　　　　　　　　プレビュー画面をカスタマイズする機能はなく、デバイスの標準カメラアプリを起動するだけ
-  #  camera：image_pickerで出来ないことをする場合はこちら
-  #  　　　　　AI曰く画像を載せて撮影するならこっちらしい
+  #  　　　　　　　 プレビュー画面をカスタマイズする機能はなく、デバイスの標準カメラアプリを起動するだけ
+  # 　　　　　　　　GPS付き撮影可能だが、Androidで正常にGPS情報が取得できない既知の問題があるらしい
+  #  camera：image_pickerで出来ないことをする場合はこちら。AI曰く画像を載せて撮影するならこっちらしい
+  # 　　　　　GPS機能はないので、camera(撮影) + geolocator(撮影時にGPS情報取得) + native_exif(撮影画像に情報埋め込み)の組み合わせが必要
   camera: ^0.11.1
+
+  # 位置情報取得に必要なプラグイン
+  # 2025/05/26 リリースの最新版
+  # https://pub.dev/packages/geolocator/versions
+  geolocator: ^14.0.1
+  
+  # 位置情報のメタデータを画像に埋め込むためのリーダー/ライター
+  # 2025/05/21 リリースの最新版
+  # https://pub.dev/packages/native_exif/versions
+  native_exif: ^0.6.2
+  
   path: ^1.9.1
 
 dev_dependencies:
