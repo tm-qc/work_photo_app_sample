@@ -58,10 +58,9 @@ class GpsService {
       // 基本的にGPSはざっくりしかとれない、時間をかける、何回も取得するなど取得制度は運任せ前提らしい
       // GoogleMapなどは大企業で費用かけて研究しまくってるらしい
       // 
-      // LocationAccuracy.bestForNavigation → 「ナビゲーション用の最高精度」の要求(期待精度: ±3-8m（環境による）取得時間: 5-20秒 電力消費: 最高)
-      // LocationAccuracy.best     → 「可能な限り高精度で」の要求(期待精度: ±5-25m（環境による）取得時間: 5-15秒 電力消費: 高)
-      // LocationAccuracy.high     → 「そこそこ高精度で」の要求(期待精度: ±10-30m（環境による）取得時間: 3-12秒 電力消費: 中高)  
-      // LocationAccuracy.medium   → 「普通の精度で」の要求(期待精度: ±20-50m（環境による）取得時間: 2-8秒 電力消費: 中)
+      // ※精度について:Androidのhighで0mから100m以内の精度です。
+      // これが最高精度っぽい。
+      // LocationAccuracyの定義ファイル。/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_platform_interface-4.2.6/lib/src/enums/location_accuracy.dartに書いてあった
       // 
       // 取れる情報の制御について
       // 現状LocationAccuracy.bestだと、±5-25mらしいが、現状都道府県市区町村までしかとれないっぽい？(動作確認場所が室内だから？)
@@ -121,7 +120,7 @@ class GpsService {
       // 
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
-          accuracy: LocationAccuracy.best,  // 最高精度
+          accuracy: LocationAccuracy.high,  // Android最高精度 0~100m
           distanceFilter: 0,                // 距離フィルタなし
         ),
       ).timeout(Duration(seconds: 10));     // タイムアウト設定
