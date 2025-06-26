@@ -4,8 +4,10 @@ import 'dart:ui' as ui;// ui.Image（画像データ）を使うため
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';// RenderRepaintBoundary を使うため
+import 'package:geolocator/geolocator.dart';
 import 'package:work_photo_app_sample/config/app_config.dart';
 import 'package:work_photo_app_sample/data/services/blackboard_setting_service.dart';
+import 'package:work_photo_app_sample/data/services/gps.dart';
 import 'package:work_photo_app_sample/domain/models/blackboard_setting_model.dart';
 import '../../../domain/models/camera_model.dart';
 import '../../../data/services/camera_service.dart';
@@ -29,6 +31,9 @@ class CameraViewModel extends ChangeNotifier {
 
   /// 黒板設定の読み込みを担当するサービス
   final BlackboardSettingService _blackboardSettingService;
+
+  /// GPS取得サービス
+  final GpsService _gpsService = GpsService();
 
   // ==============================================
   // 🏗️ コンストラクタ・初期化
@@ -165,6 +170,15 @@ class CameraViewModel extends ChangeNotifier {
     try {
       // 1. 通常のカメラ撮影（黒板は映ってない純粋な撮影画像を取得する）
       final XFile cameraImage = await _cameraService.takePicture();
+
+      // 2. GPS情報を取得
+      Position? gpsPosition = await _gpsService.getCurrentPosition();
+
+      if (gpsPosition != null) {
+        logger.i('GPS付き撮影: ${_gpsService.formatPosition(gpsPosition)}');
+      } else {
+        logger.w('GPS取得失敗。GPS情報なしで撮影を続行します。');
+      }
       
       // 2. 黒板をスクリーンショット
       final Uint8List? blackboardData = await captureBlackboardAsImage();

@@ -54,4 +54,8 @@
     
     <!-- カメラ撮影権限 -->
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- 位置情報権限 -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>
