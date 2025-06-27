@@ -27,7 +27,7 @@ class GpsService {
       // 1. スマホの設定で位置情報サービスが有効かチェック
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        // TODO：位置情報サービスが無効な場合は、ユーザーに通知して終了
+        // TODO：位置情報サービスが無効な場合は、ユーザーに通知して終了にする
         print('位置情報サービスが無効です。設定でONにしてください。');
         return null;
       }
@@ -134,12 +134,13 @@ class GpsService {
     } catch (e) {
       // エラーの種類別ハンドリング
       // TimeoutExceptionは、非同期処理がタイムアウト（時間切れ）した時に発生する例外
+      // TODO:エラー対応は権限許可されないパターンも含め、あとで検討する
       if (e is TimeoutException) {
-        logger.w('GPS取得がタイムアウトしました（10秒経過）');
+        print('GPS取得がタイムアウトしました（10秒経過）');
       } else if (e is LocationServiceDisabledException) {
-        logger.w('位置情報サービスが無効です');
+        print('位置情報サービスが無効です');
       } else if (e is PermissionDeniedException) {
-        logger.w('位置情報の権限がありません');
+        print('位置情報の権限がありません');
       } else {
         logger.e('GPS取得で予期しないエラーが発生: $e');
       }
