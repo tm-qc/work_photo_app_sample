@@ -3,7 +3,9 @@ import 'dart:typed_data';// Uint8List（バイト配列）を使うため
 import 'package:flutter/material.dart';// Offset、Size を使うため
 import 'package:camera/camera.dart';
 import 'package:gal/gal.dart';// ギャラリー保存用
+import 'package:geolocator/geolocator.dart';
 import 'package:image/image.dart' as img;// 画像合成ライブラリ
+import 'package:native_exif/native_exif.dart';
 import 'package:path/path.dart' as path;// ファイルパス操作用
 import 'package:path_provider/path_provider.dart';// アプリフォルダ取得用
 import 'package:permission_handler/permission_handler.dart';// スマホ権限管理用
@@ -217,6 +219,7 @@ class CameraService {
   /// blackboardPosition: 黒板を配置する座標（カメラプレビュー上での位置）
   /// blackboardSize: 黒板のサイズ（カメラプレビュー上でのサイズ）  
   /// cameraPreviewSize: カメラプレビューのサイズ（座標変換の基準）
+  /// position: GPS位置情報（geolocatorで取得）
   /// 
   /// 【戻り値】
   /// String?: 保存成功時はファイルパス、失敗時はnull
@@ -226,6 +229,7 @@ class CameraService {
     required Offset blackboardPosition,
     required Size blackboardSize,
     required Size cameraPreviewSize,
+    Position? position,
   }) async {
     try {
       // 1. 権限チェック
@@ -257,7 +261,15 @@ class CameraService {
       // 3. 一時ファイルに保存
       final String tempPath = await _saveTempImage(compositeImage);
 
-      // 4. ギャラリーに保存（galパッケージ）
+      // 4.GPS情報があれば埋め込み(これがないとギャラリーに位置情報がないのは確認済み)
+      if (position != null) {
+        final bool gpsResult = await addGpsToImage(tempPath, position);
+        if (!gpsResult) {
+          logger.w('GPS情報埋め込みに失敗（画像保存は継続）');
+        }
+      }
+
+      // 5. ギャラリーに保存（galパッケージ）
       await Gal.putImage(tempPath);
       return tempPath;
 
@@ -391,6 +403,84 @@ class CameraService {
 
     return filePath;
   }
+
+  /// 画像ファイルにGPS情報を埋め込む
+  /// 
+  /// 【埋め込み情報】
+  /// - 緯度（latitude）
+  /// - 経度（longitude）  
+  /// - 撮影時刻（timestamp）
+  /// 
+  /// 【用途】
+  /// 作業現場記録として最低限必要な位置・時刻情報を画像に記録
+  /// 
+  /// 【引数】
+  /// filePath: 画像ファイルのパス
+  /// position: GPS位置情報
+  /// 
+  /// 【戻り値】
+  /// bool: true=成功, false=失敗
+  Future<bool> addGpsToImage(String filePath, Position position) async {
+    try {
+      print('GPS情報埋め込み開始: $filePath');
+      
+      // 1. Exifインスタンスを作成
+      final exif = await Exif.fromPath(filePath);
+      
+      // 2. 🎯 最低限のGPS情報を10進度で書き込み
+      await exif.writeAttributes({
+        // 緯度・経度（10進度、絶対値で記録）（絶対数absで文字列）
+        'GPSLatitude': position.latitude.abs().toString(),        // 33.255481
+        'GPSLongitude': position.longitude.abs().toString(),      // 130.3065562
+        
+        // 方向情報（EXIF仕様上必須）
+        // 
+        // なぜ必要か？
+        // GPSで取得する経緯度はイギリス・グリニッジ = 0度基準になっている
+        // そのため、0以上で北緯N北半球（+）、東経E東半球（+）、もしくは0以下で北緯S南半球（-）、東経W西半球（-）
+        // のような判定をして、経緯度が+-でただしく表示されるようにケアが必要
+        'GPSLatitudeRef': position.latitude >= 0 ? 'N' : 'S',     // N（北緯）
+        'GPSLongitudeRef': position.longitude >= 0 ? 'E' : 'W',   // E（東経）
+        
+        // 撮影時刻（UTC形式）
+        'GPSTimeStamp': _formatGpsTimeSimple(position.timestamp),  // "07:13:08"
+        'GPSDateStamp': _formatGpsDateSimple(position.timestamp),  // "2025:06:27"
+      });
+      
+      // 3. リソースを解放
+      await exif.close();
+      
+      return true;
+      
+    } catch (e) {
+      logger.e('GPS情報埋め込みエラー: $e');
+      return false;
+    }
+  }
+
+
+  /// GPS時刻をシンプルなEXIF形式に変換
+  /// 
+  /// 【入力】2025-06-27 07:13:07.979Z
+  /// 【出力】"07:13:08"（時:分:秒）
+  String _formatGpsTimeSimple(DateTime timestamp) {
+    final utc = timestamp.toUtc();
+    return '${utc.hour.toString().padLeft(2, '0')}:'
+          '${utc.minute.toString().padLeft(2, '0')}:'
+          '${utc.second.toString().padLeft(2, '0')}';
+  }
+
+  /// GPS日付をシンプルなEXIF形式に変換
+  /// 
+  /// 【入力】2025-06-27 07:13:07.979Z
+  /// 【出力】"2025:06:27"（年:月:日）
+  String _formatGpsDateSimple(DateTime timestamp) {
+    final utc = timestamp.toUtc();
+    return '${utc.year}:'
+          '${utc.month.toString().padLeft(2, '0')}:'
+          '${utc.day.toString().padLeft(2, '0')}';
+  }
+
 
   // ==============================================
   // 🔧 ユーティリティメソッド

@@ -28,6 +28,7 @@ class GpsService {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         // TODO：位置情報サービスが無効な場合は、ユーザーに通知して終了にする
+        // TODO:権限は許可されてない場合は、毎回聞くようにしたほうがいいかも。一回拒否すると許可されてないまま音沙汰なく起動するので、自分で設定で設定しないといけないので、せめて気づかせないと・・
         print('位置情報サービスが無効です。設定でONにしてください。');
         return null;
       }

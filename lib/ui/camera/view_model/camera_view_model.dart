@@ -174,40 +174,43 @@ class CameraViewModel extends ChangeNotifier {
       // 2. GPS情報を取得
       Position? gpsPosition = await _gpsService.getCurrentPosition();
 
+      // TODO:GPSがなんらかの形で取得できなかったらどうする？現状はGPS情報なしで保存が良さそう？
       if (gpsPosition != null) {
-        logger.i('GPS付き撮影: ${_gpsService.formatPosition(gpsPosition)}');
+        print('GPS付き撮影: ${_gpsService.formatPosition(gpsPosition)}');
       } else {
-        logger.w('GPS取得失敗。GPS情報なしで撮影を続行します。');
+        print('GPS取得失敗。GPS情報なしで撮影を続行します。');
       }
       
-      // 2. 黒板をスクリーンショット
+      // 3. 黒板をスクリーンショット
       final Uint8List? blackboardData = await captureBlackboardAsImage();
       if (blackboardData == null) {
         logger.e('黒板データの取得に失敗');
         return null;
       }
 
-      // 3.カメラプレビューのRenderBoxを取得する
+      // 4.カメラプレビューのRenderBoxを取得する
       // 　モデルに定義したカメラプレビューのグローバルキーを利用し取得
       final RenderBox? cameraPreview = 
           _model.cameraPreviewKey.currentContext?.findRenderObject() as RenderBox?;
       // カメラプレビューのサイズオブジェクトを取得
       final Size cameraPreviewSize = cameraPreview?.size ?? Size.zero;
 
-      // 4. カメラサービスで画像合成・保存をする
+      // 5. カメラサービスで画像合成・保存をする
       // - cameraImage.path: 撮影したカメラ画像のパス
       //   "/data/user/0/com.work_photo_app_sample.work_photo_app_sample/cache/CAP3069506080177115524.jpg"
       // 
       // - blackboardData: 黒板のスクリーンショットデータ
       // - _model.blackboardPosition: 黒板の位置（画面上の座標）
       // - Size(_model.blackboardWidth, _model.blackboardHeight): 黒板のサイズ（幅と高さ）(拡大縮小あればちゃんとその値になってる)
-      // cameraPreviewSize: カメラプレビューのサイズ（撮影画像のアスペクト比に合わせるため）
+      // - cameraPreviewSize: カメラプレビューのサイズ（撮影画像のアスペクト比に合わせるため）
+      // - position: GPS位置情報
       final String? savedPath = await _cameraService.compositeAndSaveToGallery(
         cameraImagePath: cameraImage.path,
         blackboardImageData: blackboardData,
         blackboardPosition: _model.blackboardPosition,
         blackboardSize: Size(_model.blackboardWidth, _model.blackboardHeight),
         cameraPreviewSize: cameraPreviewSize,
+        position: gpsPosition,
       );
 
       if (savedPath == null) {
