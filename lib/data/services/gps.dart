@@ -117,6 +117,7 @@ class GpsService {
       // - hashCode(オブジェクト識別子): 不要 - プログラム内部用、記録には不要
       // - runtimeType(オブジェクト型): 不要 - プログラム内部用、記録には不要
       // 
+      // TODO:取得される形式は10進度。GoogleMapなど一般的には10進度(33.255481)らしいので度分(小数)(33°15.329′N)変換は必要になったら実装する
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
           accuracy: LocationAccuracy.high,  // Android最高精度 0~100m
