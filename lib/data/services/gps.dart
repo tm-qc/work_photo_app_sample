@@ -27,7 +27,8 @@ class GpsService {
       // 1. スマホの設定で位置情報サービスが有効かチェック
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        logger.w('位置情報サービスが無効です。設定でONにしてください。');
+        // TODO：位置情報サービスが無効な場合は、ユーザーに通知して終了
+        print('位置情報サービスが無効です。設定でONにしてください。');
         return null;
       }
 
@@ -38,16 +39,14 @@ class GpsService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         
-        // それでも権限要求拒否された場合は終了
-        if (permission == LocationPermission.denied) {
-          logger.w('位置情報の権限が拒否されました');
+        // それでも権限要求拒否された場合は終了(1回拒否した場合は、再度権限要求のアラートは出る)
+          print('位置情報の権限が拒否されました');
           return null;
-        }
       }
       
-      // 永続的に拒否された場合は設定画面への案内
+      // 永続的に拒否された場合は設定画面への案内(2回目以降の権限要求は出ない)
       if (permission == LocationPermission.deniedForever) {
-        logger.w('位置情報の権限が永続的に拒否されています。設定画面で許可してください。');
+        print('位置情報の権限が永続的に拒否されています。設定画面で許可してください。');
         return null;
       }
 
@@ -126,7 +125,7 @@ class GpsService {
       ).timeout(Duration(seconds: 10));     // タイムアウト設定
 
       // 4. 取得成功のログ出力
-      logger.i('GPS取得成功: 緯度=${position.latitude.toStringAsFixed(6)}, '
+      print('GPS取得成功: 緯度=${position.latitude.toStringAsFixed(6)}, '
               '経度=${position.longitude.toStringAsFixed(6)}, '
               '精度=${position.accuracy.toStringAsFixed(1)}m');
       
