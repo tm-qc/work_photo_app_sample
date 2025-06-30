@@ -58,14 +58,15 @@ class GpsService {
       // 基本的にGPSはざっくりしかとれない、時間をかける、何回も取得するなど取得制度は運任せ前提らしい
       // GoogleMapなどは大企業で費用かけて研究しまくってるらしい
       // 
-      // ※精度について:Androidのhighで0mから100m以内の精度です。
-      // これが最高精度っぽい。
-      // LocationAccuracyの定義ファイル。/AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_platform_interface-4.2.6/lib/src/enums/location_accuracy.dartに書いてあった
+      // ※精度について:Androidのhighで0mから100m以内の精度です。これが最高精度っぽい。
+      //   LocationAccuracyの定義ファイル
+      //   /AppData/Local/Pub/Cache/hosted/pub.dev/geolocator_platform_interface-4.2.6/lib/src/enums/location_accuracy.dart
       // 
-      // 取れる情報の制御について
-      // 現状LocationAccuracy.bestだと、±5-25mらしいが、現状都道府県市区町村までしかとれないっぽい？(動作確認場所が室内だから？)
-      // ただ、いつどこまで情報がとれるか不安定なのがGPSなので、出力情報は自作でメソッド作成して制御しないといけないらしい
-      // （信じられないけど、これが一般的みたい）
+      // GPSの制御にの考え方ついて
+      // - LocationAccuracy(位置精度)の設定
+      // - 逆ジオコーディングで住所に変換する場合に表示を絞りたい場合に、まさかの自作で制御作成しないといけない(都道府県まで？市町村まで？などの制御)
+      // 
+      // ※逆ジオコーディングなしなら、パッとみわからないし、そもそもGPS許可して使うからこのような制御方針なると個人的におもってる
       // 
       // 室内ではGPS電波が届かないため、以下のような代替手段で位置推定を試みるらしい
       // 1. WiFi測位（WiFiアクセスポイントのデータベース使用:±30-200m）
@@ -119,6 +120,7 @@ class GpsService {
       // - runtimeType(オブジェクト型): 不要 - プログラム内部用、記録には不要
       // 
       // TODO:取得される形式は10進度。GoogleMapなど一般的には10進度(33.255481)らしいので度分(小数)(33°15.329′N)変換は必要になったら実装する
+      //      ※10進度(33.255481) → 度分(小数)(33°15.329′N)への変換はまさかの自作しないといけないので、正しい計算ができるように仕様が落ち着くのかわからないのが心配
       Position position = await Geolocator.getCurrentPosition(
         locationSettings: LocationSettings(
           accuracy: LocationAccuracy.high,  // Android最高精度 0~100m
@@ -126,7 +128,7 @@ class GpsService {
         ),
       ).timeout(Duration(seconds: 10));     // タイムアウト設定
 
-      // 4. 取得成功のログ出力
+      // 4. 取得成功の確認用ログ出力
       print('GPS取得成功: 緯度=${position.latitude.toStringAsFixed(6)}, '
               '経度=${position.longitude.toStringAsFixed(6)}, '
               '精度=${position.accuracy.toStringAsFixed(1)}m');

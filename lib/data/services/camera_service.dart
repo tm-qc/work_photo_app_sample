@@ -422,16 +422,14 @@ class CameraService {
   /// bool: true=成功, false=失敗
   Future<bool> addGpsToImage(String filePath, Position position) async {
     try {
-      print('GPS情報埋め込み開始: $filePath');
-      
-      // 1. Exifインスタンスを作成
+      // 1. Exifインスタンスを作成(画像にGPS情報を書き込むためのインスタンス)
       final exif = await Exif.fromPath(filePath);
       
-      // 2. 🎯 最低限のGPS情報を10進度で書き込み
+      // 2. 🎯 GPS情報を10進度で画像に書き込み
       await exif.writeAttributes({
         // 緯度・経度（10進度、絶対値で記録）（絶対数absで文字列）
-        'GPSLatitude': position.latitude.abs().toString(),        // 33.255481
-        'GPSLongitude': position.longitude.abs().toString(),      // 130.3065562
+        'GPSLatitude': position.latitude.abs().toString(),
+        'GPSLongitude': position.longitude.abs().toString(),
         
         // 方向情報（EXIF仕様上必須）
         // 
@@ -461,13 +459,15 @@ class CameraService {
 
   /// GPS時刻をシンプルなEXIF形式に変換
   /// 
+  /// JST変換 + 一桁の数字を二桁のゼロパディングに変換
+  /// 
   /// 【入力】2025-06-27 07:13:07.979Z
   /// 【出力】"07:13:08"（時:分:秒）
   String _formatGpsTimeSimple(DateTime timestamp) {
-    final utc = timestamp.toUtc();
-    return '${utc.hour.toString().padLeft(2, '0')}:'
-          '${utc.minute.toString().padLeft(2, '0')}:'
-          '${utc.second.toString().padLeft(2, '0')}';
+    final jst = timestamp.toUtc().add(Duration(hours: 9)); // UTCをJSTに変換（日本時間はUTC+9）
+    return '${jst.hour.toString().padLeft(2, '0')}:'
+          '${jst.minute.toString().padLeft(2, '0')}:'
+          '${jst.second.toString().padLeft(2, '0')}';
   }
 
   /// GPS日付をシンプルなEXIF形式に変換
@@ -475,10 +475,10 @@ class CameraService {
   /// 【入力】2025-06-27 07:13:07.979Z
   /// 【出力】"2025:06:27"（年:月:日）
   String _formatGpsDateSimple(DateTime timestamp) {
-    final utc = timestamp.toUtc();
-    return '${utc.year}:'
-          '${utc.month.toString().padLeft(2, '0')}:'
-          '${utc.day.toString().padLeft(2, '0')}';
+    final jst = timestamp.toUtc().add(Duration(hours: 9));
+    return '${jst.year}:'
+          '${jst.month.toString().padLeft(2, '0')}:'
+          '${jst.day.toString().padLeft(2, '0')}';
   }
 
 
