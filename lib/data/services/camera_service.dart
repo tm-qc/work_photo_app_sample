@@ -63,7 +63,7 @@ class CameraService {
   /// [resolutionPreset]: 画質設定（デフォルト: medium）
   ///
   /// 【戻り値】
-  /// Future<void>: 初期化完了を示すFuture
+  /// Future: 初期化完了を示すFuture
   Future<void> initializeCamera(CameraDescription camera) async {
     try {
       // 既存のコントローラーがあれば解放
@@ -180,7 +180,7 @@ class CameraService {
   /// ViewModel.takePicture() から呼ばれる
   ///
   /// 【戻り値】
-  /// Future<XFile>: 撮影された画像ファイル
+  /// Future: 撮影された画像ファイル
   Future<XFile> takePicture() async {
     try {
       // カメラの初期化確認
@@ -531,7 +531,7 @@ class CameraService {
   /// トラブルシューティング
   ///
   /// 【戻り値】
-  /// Map<String, dynamic>: カメラの状態情報
+  /// Map: カメラの状態情報
   /// ※25/06/06 時点未使用
   Map<String, dynamic> getCameraStatus() {
     return {

@@ -250,7 +250,7 @@ class GpsService {
   /// - エラー原因の特定
   ///
   /// 【戻り値】
-  /// Map<String, dynamic>: GPS関連の状態情報
+  /// Map: GPS関連の状態情報
   Future<Map<String, dynamic>> getGpsStatus() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
